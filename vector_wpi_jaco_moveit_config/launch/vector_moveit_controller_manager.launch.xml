@@ -1,0 +1,12 @@
+<launch>
+
+    <!-- Set the param that trajectory_execution_manager needs to find the controller plugin -->
+    <arg name="moveit_controller_manager" default="moveit_simple_controller_manager/MoveItSimpleControllerManager" />
+    <param name="moveit_controller_manager" value="$(arg moveit_controller_manager)"/>
+    <!-- load controller_list -->
+    <rosparam file="$(find vector_wpi_jaco_moveit_config)/config/controllers.yaml"/>
+
+    <!-- disable timeout for trajectory execution: We have to disable because wpi_jaco_wrapper can't handle-->
+    <param name="/move_group/trajectory_execution/execution_duration_monitoring" value="false" />
+
+</launch>

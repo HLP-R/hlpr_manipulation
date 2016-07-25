@@ -1,0 +1,12 @@
+controller_list:
+  - name: "jaco_arm/joint_velocity_controller"
+    action_ns: trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - right_shoulder_pan_joint
+      - right_shoulder_lift_joint
+      - right_elbow_joint
+      - right_wrist_1_joint
+      - right_wrist_2_joint
+      - right_wrist_3_joint
