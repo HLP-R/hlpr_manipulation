@@ -1,4 +1,4 @@
-import roslib; 
+import roslib; roslib.load_manifest('hlpr_manipulation_utils')
 from sensor_msgs.msg import JointState
 from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, GripperCmd, GripperStat
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -107,8 +107,8 @@ class LinearActuator:
 
 class Arm:
   def __init__(self, arm_prefix = 'right'):
-    self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10)
-    self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10)
+    self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
+    self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
     
     self._arm_prefix = arm_prefix
     self.arm_joint_names = [  self._arm_prefix + "_shoulder_pan_joint",   self._arm_prefix + "_shoulder_lift_joint",   self._arm_prefix + "_elbow_joint", 
@@ -121,10 +121,13 @@ class Arm:
     
     self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
     
-    if(self.smooth_joint_trajectory_client.wait_for_server(rospy.Duration(5.0))):
+    #if(self.smooth_joint_trajectory_client.wait_for_server(rospy.Duration(5.0))):
+    if(self.smooth_joint_trajectory_client.wait_for_server()):
       self.traj_connection = True
     else:
       self.traj_connection = False
+
+    print self.traj_connection
 
     self.angular_cmd = AngularCommand()
     self.angular_cmd.armCommand = True
@@ -239,6 +242,7 @@ class Arm:
       
   def ang_cmd_wait(self,angles,epsilon=0.05, maxIter=50, rate=10):
     error = epsilon + 1;
+    epsilon=5
     iterNum = 0;
     #self.ang_cmd_loop(angles,rate)
     self.ang_pos_cmd(angles)
@@ -287,7 +291,8 @@ class Arm:
         raise Exception('Cannot specify efforts with velocities and accelerations at the same time')
     if (not accs == 0) and vels == 0:
       raise Exception('Cannot specify accelerations without velocities')
-    
+   
+    total_time_from_start = 0.5; 
     for t in range(0, len(waypoints)):
       point = JointTrajectoryPoint()
   
@@ -313,21 +318,22 @@ class Arm:
         if not len(effort) == len(joint_traj.joint_names):
           raise Exception('The number of provided joint efforts is not equal to the number of available joints for index: ' + str(t))
         point.effort = effort 
-      
+
       if not durations == 0.:
         point.duration = duration
-      
+
+      # Deal with increasing time for each trajectory point
+      point.time_from_start = rospy.Duration(total_time_from_start)
+      total_time_from_start = total_time_from_start + 1.0 
+
+      # Set the points
       joint_traj.points.append(point)
-    
+     
     traj_goal = FollowJointTrajectoryGoal()
     traj_goal.trajectory = joint_traj
-    #print traj_goal
-    #print self.joint_states
 
     self.smooth_joint_trajectory_client.send_goal(traj_goal)
-   
     self.smooth_joint_trajectory_client.wait_for_result()
-   
     return self.smooth_joint_trajectory_client.get_result() 
 
 #TODO: figure this out
