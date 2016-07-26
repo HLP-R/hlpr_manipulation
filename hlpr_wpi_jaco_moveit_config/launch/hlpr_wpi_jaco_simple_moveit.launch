@@ -13,7 +13,7 @@
     </group>
 
     <!-- Run the main MoveIt executable with trajectory execution --> 
-    <include file="$(find vector_wpi_jaco_moveit_config)/launch/move_group.launch">
+    <include file="$(find hlpr_wpi_jaco_moveit_config)/launch/move_group.launch">
         <arg name="allow_trajectory_execution" value="$(arg use_wpi_jaco_exec)"/>
         <arg name="fake_execution" value="false"/>
         <arg name="info" value="true"/>
