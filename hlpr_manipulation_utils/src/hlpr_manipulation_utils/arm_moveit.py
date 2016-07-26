@@ -27,8 +27,7 @@ class ArmMoveIt:
     ## to one group of joints.  In this case the group is the joints in the left
     ## arm.  This interface can be used to plan and execute motions on the left
     ## arm.
-    self.group = [moveit_commander.MoveGroupCommander("arm"), moveit_commander.MoveGroupCommander("gripper"),
-         moveit_commander.MoveGroupCommander("head")]
+    self.group = [moveit_commander.MoveGroupCommander("arm")]
 
     self.planner = "RRTConnectkConfigDefault";
 
