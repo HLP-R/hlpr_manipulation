@@ -1,0 +1,5 @@
+float32[] origin
+geometry_msgs/Pose[] goals
+float32[] tolerance
+---
+trajectory_msgs/JointTrajectoryPoint[] poses
