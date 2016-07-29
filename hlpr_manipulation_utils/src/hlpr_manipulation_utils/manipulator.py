@@ -4,6 +4,7 @@ from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, Gripper
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
 #from wpi_jaco_msgs.srv import GravComp
+from hlpr_manipulation_utils.arm_moveit import *
 
 import rospy
 from math import pi, sqrt
@@ -146,7 +147,23 @@ class Arm:
 #    else:
     self.gc_connection = False    
 #    self.grav_comp_client = rospy.ServiceProxy('/jaco_arm/grav_comp', GravComp)
-      
+ 
+    self.arm_planner = ArmMoveIt() 
+
+  def _get_arm_joint_values(self, msg):
+
+    # Cycle through the active joints and populate
+    # a dictionary for those values
+    joint_values = dict()
+    for joint_name in self._arm_joint_names:
+        # Find that joint name in msg
+        idx = msg.name.index(joint_name)
+ 
+        # Populate the joint message in a dictionary
+        joint_values[joint_name] = msg.position[idx]
+ 
+    return joint_values
+    
   def enableGravComp(self):
     #if(not self.gc_connection):
     #  print 'GravComp Service not available'
@@ -336,33 +353,63 @@ class Arm:
     self.smooth_joint_trajectory_client.wait_for_result()
     return self.smooth_joint_trajectory_client.get_result() 
 
+  def execute_traj_moveit(self, waypoints):
+    # Cycle through waypoints
+    for point in waypoints:
+      plannedTraj = self.arm_planner.plan_jointTargetInput(point)
+      if plannedTraj == None or len(plannedTraj.joint_trajectory.points) < 1:
+        print "Error: no plan found"
+      else:
+        traj_goal = FollowJointTrajectoryGoal()
+        traj_goal.trajectory = plannedTraj.joint_trajectory
+        self.smooth_joint_trajectory_client.send_goal(traj_goal)
+        self.smooth_joint_trajectory_client.wait_for_result()   
+        self.smooth_joint_trajectory_client.get_result() 
+
 #TODO: figure this out
-  def upper_tuck(self, vanilla = False):
-    if vanilla:
+  def upper_tuck(self, use_moveit=True, vanilla = False):
+
+    if use_moveit:
+      # Just last point
+      self.execute_traj_moveit([self.ut_wps[-1]])
+    elif vanilla:
       self.sendWaypointTrajectory(self.ut_wps)
     else:
       self._ut_with_network()
 
   def upper_untuck(self, vanilla = False):
-    if vanilla:
+    if use_moveit:
+      # Just last point
+      self.execute_traj_moveit([self.un_ut_wps[-1]])
+    elif vanilla:
       self.sendWaypointTrajectory(self.un_ut_wps)
     else:
       self.untuck()
 
-  def lower_tuck(self, vanilla = False):
-    if vanilla:
+  def lower_tuck(self, use_moveit=True, vanilla = False):
+    if use_moveit:
+      # Just last point
+      self.execute_traj_moveit([self.lt_wps[-1]])
+    elif vanilla:
       self.sendWaypointTrajectory(self.lt_wps)
     else:
       self._lt_with_network()
 
-  def lower_untuck(self, vanilla = False):
-    if vanilla:
+  def lower_untuck(self, use_moveit=True, vanilla = False):
+    if use_moveit:
+      # Just last point
+      self.execute_traj_moveit([self.un_lt_wps[-1]])
+    elif vanilla:
       self.sendWaypointTrajectory(self.un_lt_wps)
     else:
       self.untuck()
     
-  def untuck(self):
-    self._untuck_with_network()
+  def untuck(self, use_moveit=True):
+    if use_moveit:
+      # Just last point
+      self.execute_traj_moveit([self.tuck_network[-1]])
+    else:
+        self._untuck_with_network()
 
   def _init_tuck_poses(self):
     self.mid_wp = [-1.57, 3.14, 1.05, -1.57, 1.05, 1.57]
