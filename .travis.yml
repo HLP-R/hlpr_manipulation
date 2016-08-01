@@ -58,7 +58,7 @@ env:
     - CI_SOURCE_PATH=$(pwd)
     - ROSINSTALL_FILE=$CI_SOURCE_PATH/dependencies.rosinstall
     - CATKIN_OPTIONS=$CI_SOURCE_PATH/catkin.options
-    - ROS_PARALLEL_JOBS='-j1' # -j8 -16 # For now...
+    - ROS_PARALLEL_JOBS='-j8 -l6'
 
 ################################################################################
 
@@ -74,6 +74,17 @@ before_install:
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
+  # Specific for freenect2
+  - git clone https://github.com/OpenKinect/libfreenect2.git
+  - sudo apt-get install build-essential cmake pkg-config
+  - sudo apt-get install -y libturbojpeg libjpeg-turbo8-dev
+  - sudo apt-get install libopenni2-dev
+  - sudo apt-get install libnlopt-dev
+  - cd libfreenect2/depends && ./download_debs_trusty.sh && sudo dpkg -i debs/libusb*deb && sh install_ubuntu.sh
+  - sudo dpkg -i libglfw3*_3.0.4-1_*.deb && sudo apt-get install mesa-common-dev freeglut3-dev libxrandr-dev libxi-dev
+  - cd .. && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/freenect2 && make && make install
+  - sudo ln -sf ~/freenect2/lib/cmake/freenect2/freenect2Config.cmake /usr/share/cmake-3.2/Modules/Findfreenect2.cmake
+
 
 # Create a catkin workspace with the package under integration.
 install:
@@ -88,16 +99,13 @@ install:
   # Add the package under integration to the workspace using a symlink.
   - cd ~/catkin_ws/src
   - ln -s $CI_SOURCE_PATH .
-  # Add extra packages necessary
-  - git clone https://github.com/HLP-R/hector_gazebo.git
-
-
 
 # Install all dependencies, using wstool and rosdep.
 # wstool looks for a ROSINSTALL_FILE defined in the environment variables.
 before_script:
   # source dependencies: install using wstool.
   - cd ~/catkin_ws/src
+  - git clone https://github.com/StanleyInnovation/vector_v1.git # change later
   - wstool init
   - if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi
   - wstool up
@@ -123,5 +131,5 @@ script:
   - source devel/setup.bash
   - cd $CI_SOURCE_PATH
   - pwd
-  - ./hlpr_gazebo/scripts/body_part_setup.py
+  # currently no tests - just verify that we didn't break catkin_make
   #- catkin_make run_tests && catkin_make test

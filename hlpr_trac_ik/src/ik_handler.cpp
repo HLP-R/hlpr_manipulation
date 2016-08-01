@@ -1,5 +1,5 @@
 #include "ros/ros.h"
-#include "trac_ik_wrapper/IKHandler.h"
+#include "hlpr_trac_ik/IKHandler.h"
 #include <trac_ik/trac_ik.hpp>
 #include <geometry_msgs/Pose.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
@@ -8,8 +8,8 @@
 
 TRAC_IK::TRAC_IK *solver;
 
-bool getPose(trac_ik_wrapper::IKHandler::Request  &req,
-         trac_ik_wrapper::IKHandler::Response &res)
+bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
+         hlpr_trac_ik::IKHandler::Response &res)
 {
   int poseLen = req.origin.size();
 
@@ -60,12 +60,12 @@ bool getPose(trac_ik_wrapper::IKHandler::Request  &req,
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "trac_ik_wrapper_server");
+  ros::init(argc, argv, "hlpr_trac_ik_server");
   ros::NodeHandle n;
 
   solver = new TRAC_IK::TRAC_IK("linear_actuator_link", "right_ee_link", "/robot_description",0.005,1e-5, TRAC_IK::Distance);
 
-  ros::ServiceServer service = n.advertiseService("trac_ik_wrapper", getPose);
+  ros::ServiceServer service = n.advertiseService("hlpr_trac_ik", getPose);
   ROS_INFO("IK wrapper ready.");
   ros::spin();
   delete solver;

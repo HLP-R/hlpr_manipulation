@@ -1,17 +1,18 @@
 <package format="2">
-  <name>trac_ik_wrapper</name>
+  <name>hlpr_trac_ik</name>
   <version>0.0.1</version>
   <description>
     Wrapper for trac_ik
   </description>
   <author>Tesca Fitzgerald</author>
   <maintainer email="tesca.fitzgerald@gmail.com">Tesca Fitzgerald</maintainer>
-  <license>TBD</license>
-  <url>TBD</url>
+  <license>BSD</license>
+  <url>https://github.com/HLP-R/hlpr_manipulation/</url>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
-  <build_depend>eigen3</build_depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>cmake_modules</build_depend>
   <exec_depend>message_runtime</exec_depend>
 
   <depend>roscpp</depend>

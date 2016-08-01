@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(trac_ik_wrapper)
+project(hlpr_trac_ik)
 
-find_package(catkin REQUIRED COMPONENTS message_generation roscpp std_msgs geometry_msgs trajectory_msgs trac_ik_lib)
-find_package(Eigen3 REQUIRED)
+find_package(catkin REQUIRED COMPONENTS message_generation roscpp std_msgs geometry_msgs trajectory_msgs trac_ik_lib cmake_modules)
+find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS date_time)
 find_package(orocos_kdl REQUIRED)
 
@@ -27,7 +27,7 @@ catkin_package(
 
 include_directories(
   ${catkin_INCLUDE_DIRS} 
-  ${Eigen3_INCLUDE_DIR}
+  ${Eigen_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${orocos_kdl_INCLUDE_DIRS}
 )
@@ -48,7 +48,7 @@ install(TARGETS trac_ik_wrapper
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+#install(DIRECTORY launch
+#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#)
 
