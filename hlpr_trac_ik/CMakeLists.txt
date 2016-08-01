@@ -32,9 +32,9 @@ include_directories(
   ${orocos_kdl_INCLUDE_DIRS}
 )
 
-add_executable(trac_ik_wrapper src/ik_handler.cpp)
-target_link_libraries(trac_ik_wrapper ${catkin_LIBRARIES})
-add_dependencies(trac_ik_wrapper trac_ik_wrapper_generate_messages_cpp)
+add_executable(hlpr_trac_ik src/ik_handler.cpp)
+target_link_libraries(hlpr_trac_ik ${catkin_LIBRARIES})
+add_dependencies(hlpr_trac_ik hlpr_trac_ik_generate_messages_cpp)
 
 
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -42,7 +42,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS trac_ik_wrapper
+install(TARGETS hlpr_trac_ik
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
