@@ -13,7 +13,7 @@ from math import pi
 
 class ArmMoveIt:
 
-  def __init__(self):
+  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
     # self.pose = geometry_msgs.msg.PoseStamped()
     ## Instantiate a RobotCommander object.  This object is an interface to
     ## the robot as a whole.
@@ -29,7 +29,11 @@ class ArmMoveIt:
     ## arm.
     self.group = [moveit_commander.MoveGroupCommander("arm")]
 
-    self.planner = "RRTConnectkConfigDefault";
+    # Set the planner
+    self.planner = default_planner
+
+    # Set the planning pose reference frame
+    self.group[0].set_pose_reference_frame(planning_frame)
 
   def get_IK(self, newPose, root = None):
     ## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)
