@@ -9,7 +9,7 @@ import geometry_msgs.msg
 import std_msgs.msg
 import wpi_jaco_msgs.msg
 import wpi_jaco_msgs.srv
-from math import pi
+from math import pi, floor, ceil, fabs
 
 class ArmMoveIt:
 
@@ -104,13 +104,14 @@ class ArmMoveIt:
     ## input: target joint angles (list) of the robot
     ## output: plan from current joint angles to the target one
     try:
-      self.group[0].set_joint_value_target(target_joint)
+      self.group[0].set_joint_value_target(self._simplify_joints(target_joint))
       self.group[0].set_planner_id(self.planner)
       planAns=self.group[0].plan()
       return planAns
     except:
       print 'No plan found, see the moveit terminal for the error'
       print("Unexpected error:", sys.exc_info()[0])
+      import pdb; pdb.set_trace()
       return None
     
   def plan_poseTargetInput(self,target_pose):
@@ -125,7 +126,26 @@ class ArmMoveIt:
       print 'No plan found, see the moveit terminal for the error'
       print("Unexpected error:", sys.exc_info()[0])
       return None
-  
+ 
+  def _simplify_angle(self, angle):
+    # Very simple function that makes sure the angles are between -pi and pi
+    if angle > pi:
+      while angle > pi:
+        angle -= pi
+    elif angle < -pi:
+      while angle < -pi:
+        angle += pi
+
+    return angle
+
+  def _simplify_joints(self, joint_dict):
+    # Helper function to convert a dictionary of joint values
+    simplified_joints = dict()
+    for joint in joint_dict:
+      simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
+
+    return simplified_joints
+ 
   def box_table_scene(self) :
     
     #Scene : add box 
