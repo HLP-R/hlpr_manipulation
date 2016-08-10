@@ -111,7 +111,6 @@ class ArmMoveIt:
     except:
       print 'No plan found, see the moveit terminal for the error'
       print("Unexpected error:", sys.exc_info()[0])
-      import pdb; pdb.set_trace()
       return None
     
   def plan_poseTargetInput(self,target_pose):
