@@ -276,8 +276,6 @@ class Arm:
   #the full handling of vels, accs and effs will come later
   # only the waypoints are needed for wpi jaco! the rest gets thrown away anyway so feel free to skip
   def sendWaypointTrajectory(self, waypoints, durations = 0., vels = 0., accs = 0., effs = 0.):
-    print 'got trajectory:'
-    print waypoints
     if not self.ang_cmd_wait(waypoints[0]):
       print 'Cannot go to the first point in the trajectory'
       return None
@@ -377,7 +375,7 @@ class Arm:
     else:
       self._ut_with_network()
 
-  def upper_untuck(self, vanilla = False):
+  def upper_untuck(self, use_moveit=True, vanilla = False):
     if use_moveit:
       # Just last point
       self.execute_traj_moveit([self.un_ut_wps[-1]])
