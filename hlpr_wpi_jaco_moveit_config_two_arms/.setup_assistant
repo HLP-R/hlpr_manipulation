@@ -5,4 +5,4 @@ moveit_setup_assistant_config:
   SRDF:
     relative_path: config/vector.srdf
   CONFIG:
-    generated_timestamp: 1472489441
+    generated_timestamp: 1472596335
