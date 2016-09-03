@@ -351,6 +351,7 @@ class Arm:
     self.smooth_joint_trajectory_client.wait_for_result()
     return self.smooth_joint_trajectory_client.get_result() 
 
+  # Expects waypoints to be in joint space
   def execute_traj_moveit(self, waypoints):
     # Cycle through waypoints
     for point in waypoints:
@@ -363,6 +364,26 @@ class Arm:
         self.smooth_joint_trajectory_client.send_goal(traj_goal)
         self.smooth_joint_trajectory_client.wait_for_result()   
         self.smooth_joint_trajectory_client.get_result() 
+
+  # Expects waypoints to be in end effector space
+  def execute_pose_traj_moveit(self, waypoints):
+    # Cycle through waypoints
+    for point in waypoints:
+      plannedTraj = self.arm_planner.plan_poseTargetInput(point)
+      if plannedTraj == None or len(plannedTraj.joint_trajectory.points) < 1:
+        print "Error: no plan found"
+	return -1
+      else:
+        self.execute_plan_traj(plannedTraj)
+	return 1
+
+  def execute_plan_traj(self, plannedTraj):
+    traj_goal = FollowJointTrajectoryGoal()
+    traj_goal.trajectory = plannedTraj.joint_trajectory
+    self.smooth_joint_trajectory_client.send_goal(traj_goal)
+    self.smooth_joint_trajectory_client.wait_for_result()   
+    self.smooth_joint_trajectory_client.get_result() 
+
 
 #TODO: figure this out
   def upper_tuck(self, use_moveit=True, vanilla = False):
