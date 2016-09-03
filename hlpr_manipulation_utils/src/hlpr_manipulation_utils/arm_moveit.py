@@ -139,10 +139,14 @@ class ArmMoveIt:
 
   def _simplify_joints(self, joint_dict):
     # Helper function to convert a dictionary of joint values
-    simplified_joints = dict()
-    for joint in joint_dict:
-      simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
-
+    if isinstance(joint_dict, dict):
+      simplified_joints = dict()
+      for joint in joint_dict:
+        simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
+    elif isinstance(joint_dict, list):
+      simplified_joints = []
+      for a in joint_dict:
+	simplified_joints.append(self._simplify_angle(a))
     return simplified_joints
  
   def box_table_scene(self) :

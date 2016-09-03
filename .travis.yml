@@ -74,6 +74,7 @@ before_install:
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
+  - sudo apt-get install -y libeigen3-dev
   # Specific for freenect2
   - git clone https://github.com/OpenKinect/libfreenect2.git
   - sudo apt-get install build-essential cmake pkg-config

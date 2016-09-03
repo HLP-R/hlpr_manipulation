@@ -1,9 +1,9 @@
 <launch>
 
     <!-- Warning: if you set use_wpi_jaco_exec false, you cannot execute a trajectory through moveit --> 
-    <arg name="wpi_jaco_launch" default="false" />
-    <arg name="use_wpi_jaco_exec" default="false" />
-    <arg name="sim" default="false" />
+    <arg name="wpi_jaco_launch" default="true" />
+    <arg name="use_wpi_jaco_exec" default="true" />
+    <arg name="sim" default="true" />
 
 
     <group if="$(arg wpi_jaco_launch)">
@@ -21,19 +21,21 @@
         </group>
     </group>
 
-    <!-- Run the main MoveIt executable with trajectory execution -->  
-    <include file="$(find hlpr_wpi_jaco_moveit_config)/launch/move_group.launch" unless="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
+    <!-- Run the main MoveIt executable with trajectory execution --> 
+    <!-- Run the main MoveIt executable with trajectory execution --> 
+    <include file="$(find pearl_wpi_jaco_moveit_config)/launch/move_group.launch" unless="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
         <arg name="allow_trajectory_execution" value="$(arg use_wpi_jaco_exec)"/>
         <arg name="fake_execution" value="false"/>
         <arg name="info" value="true"/>
         <arg name="debug" value="false"/>
     </include>
 
-    <include file="$(find hlpr_wpi_jaco_moveit_config_two_arms)/launch/move_group.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
+    <include file="$(find pearl_wpi_jaco_moveit_config)/launch/move_group.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
         <arg name="allow_trajectory_execution" value="$(arg use_wpi_jaco_exec)"/>
         <arg name="fake_execution" value="false"/>
         <arg name="info" value="true"/>
         <arg name="debug" value="false"/>
     </include>
+
 
 </launch>
