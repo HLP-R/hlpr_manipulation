@@ -358,12 +358,14 @@ class Arm:
       plannedTraj = self.arm_planner.plan_jointTargetInput(point)
       if plannedTraj == None or len(plannedTraj.joint_trajectory.points) < 1:
         print "Error: no plan found"
+	return -1
       else:
         traj_goal = FollowJointTrajectoryGoal()
         traj_goal.trajectory = plannedTraj.joint_trajectory
         self.smooth_joint_trajectory_client.send_goal(traj_goal)
         self.smooth_joint_trajectory_client.wait_for_result()   
         self.smooth_joint_trajectory_client.get_result() 
+	return 1
 
   # Expects waypoints to be in end effector space
   def execute_pose_traj_moveit(self, waypoints):
@@ -390,11 +392,13 @@ class Arm:
 
     if use_moveit:
       # Just last point
-      self.execute_traj_moveit([self.ut_wps[-1]])
+      return self.execute_traj_moveit([self.ut_wps[-1]])
     elif vanilla:
       self.sendWaypointTrajectory(self.ut_wps)
+      return 1
     else:
       self._ut_with_network()
+      return 1
 
   def upper_untuck(self, use_moveit=True, vanilla = False):
     if use_moveit:
