@@ -20,8 +20,8 @@ class Manipulator:
     self.linear_actuator = LinearActuator()
 
 class Gripper:
-  def __init__(self):
-    self.pub_grp  = rospy.Publisher('/vector/right_gripper/cmd', GripperCmd, queue_size = 10)
+  def __init__(self, prefix='right'):
+    self.pub_grp  = rospy.Publisher('/vector/'+prefix+'_gripper/cmd', GripperCmd, queue_size = 10)
     self.cmd = GripperCmd()
     
     #i have it here but it is not useful
@@ -29,7 +29,7 @@ class Gripper:
     #self.last_js_update = None
     #self.joint_state = None
     
-    rospy.Subscriber('/vector/right_gripper/stat', GripperStat, self.st_cb)
+    rospy.Subscriber('/vector/'+prefix+'_gripper/stat', GripperStat, self.st_cb)
     self.last_st_update = None
     self.gripper_stat = GripperStat()
     
