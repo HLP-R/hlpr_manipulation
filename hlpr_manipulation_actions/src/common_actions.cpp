@@ -36,13 +36,14 @@ CommonActions::CommonActions() : pnh("~"),
   homePosition[4] = 1.4455;
   homePosition[5] = 1.3156;
 
+  //setup retract position (lower tuck from hlpr_manipulation_utils)
   defaultRetractPosition.resize(NUM_JACO_JOINTS);
-  defaultRetractPosition[0] = -2.9388;
-  defaultRetractPosition[1] = 2.8894;
-  defaultRetractPosition[2] = 0.5216;
-  defaultRetractPosition[3] = -3.1342;
-  defaultRetractPosition[4] = 1.0143;
-  defaultRetractPosition[5] = 1.1296;
+  defaultRetractPosition[0] = -1.21;
+  defaultRetractPosition[1] = 4.76;
+  defaultRetractPosition[2] = 0.83;
+  defaultRetractPosition[3] = -2.60;
+  defaultRetractPosition[4] = 2.65;
+  defaultRetractPosition[5] = 1.63;
 
   angularCmdPublisher = n.advertise<wpi_jaco_msgs::AngularCommand>("jaco_arm/angular_cmd", 1);
 
