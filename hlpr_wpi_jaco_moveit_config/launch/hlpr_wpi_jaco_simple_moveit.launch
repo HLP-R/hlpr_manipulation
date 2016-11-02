@@ -4,6 +4,7 @@
     <arg name="wpi_jaco_launch" default="false" />
     <arg name="use_wpi_jaco_exec" default="false" />
     <arg name="sim" default="false" />
+    <arg name="use_octomap" default="false" />
 
 
     <group if="$(arg wpi_jaco_launch)">
@@ -27,6 +28,7 @@
         <arg name="fake_execution" value="false"/>
         <arg name="info" value="true"/>
         <arg name="debug" value="false"/>
+        <arg name="use_octomap" value="$(arg use_octomap)"/>
     </include>
 
     <include file="$(find hlpr_wpi_jaco_moveit_config_two_arms)/launch/move_group.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">

@@ -19,6 +19,7 @@
   <arg name="max_safe_path_cost" default="1"/>
   <arg name="jiggle_fraction" default="0.05" />
   <arg name="publish_monitored_planning_scene" default="true"/>
+  <arg name="use_octomap" default="false" />
 
   <!-- Planning Functionality -->
   <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config)/launch/planning_pipeline.launch.xml">
@@ -35,7 +36,7 @@
   <!-- Sensors Functionality -->
   <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config)/launch/sensor_manager.launch.xml" if="$(arg allow_trajectory_execution)">
     <arg name="moveit_sensor_manager" value="vector" />
-	<arg name="use_octomap_filter" value="false" />
+	<arg name="use_octomap_filter" value="$(arg use_octomap)" />
   </include>
 
   <!-- Start the actual move_group node/action server -->
