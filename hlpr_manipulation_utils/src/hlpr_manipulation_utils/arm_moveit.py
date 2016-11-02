@@ -35,6 +35,12 @@ class ArmMoveIt:
     # Set the planning pose reference frame
     self.group[0].set_pose_reference_frame(planning_frame)
 
+    # Set continuous joint names
+    self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
+    # NOTE: order that moveit currently is configured
+    # ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
+    self.continous_joints_list = [0,3,4,5] # joints that are continous
+
   def get_IK(self, newPose, root = None):
     ## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)
     rospy.wait_for_service('compute_ik')
@@ -130,10 +136,10 @@ class ArmMoveIt:
     # Very simple function that makes sure the angles are between -pi and pi
     if angle > pi:
       while angle > pi:
-        angle -= pi
+        angle -= 2*pi
     elif angle < -pi:
       while angle < -pi:
-        angle += pi
+        angle += 2*pi
 
     return angle
 
@@ -142,11 +148,20 @@ class ArmMoveIt:
     if isinstance(joint_dict, dict):
       simplified_joints = dict()
       for joint in joint_dict:
-        simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
+	# Pull out the name of the joint
+	joint_name = '_'.join(joint.split('_')[1::])
+	if joint_name in self.continuous_joints:
+	  simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
+	else:
+	  simplified_joints[joint] = joint_dict[joint]
     elif isinstance(joint_dict, list):
       simplified_joints = []
-      for a in joint_dict:
-	simplified_joints.append(self._simplify_angle(a))
+      for i in xrange(len(joint_dict)):
+	a = joint_dict[i]
+	if i in self.continuous_joints_list:
+	  simplified_joints.append(self._simplify_angle(a))
+	else:
+	  simplified_joints.append(a)
     return simplified_joints
  
   def box_table_scene(self) :
