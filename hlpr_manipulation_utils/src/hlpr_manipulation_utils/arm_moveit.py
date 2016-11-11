@@ -106,11 +106,14 @@ class ArmMoveIt:
       print "Service call failed: %s"%e
 
 
-  def plan_jointTargetInput(self,target_joint):
-    ## input: target joint angles (list) of the robot
-    ## output: plan from current joint angles to the target one
+  def plan_targetInput(self, target, joint_flag):
+    '''Generic target planner that what type is specified'''
     try:
-      self.group[0].set_joint_value_target(self._simplify_joints(target_joint))
+      if (joint_flag):
+	self.group[0].set_joint_value_target(self._simplify_joints(target))
+      else:
+	self.group[0].set_pose_target(target)
+
       self.group[0].set_planner_id(self.planner)
       planAns=self.group[0].plan()
       return planAns
@@ -118,20 +121,76 @@ class ArmMoveIt:
       print 'No plan found, see the moveit terminal for the error'
       print("Unexpected error:", sys.exc_info()[0])
       return None
-    
-  def plan_poseTargetInput(self,target_pose):
-    ## input: tart pose (geometry_msgs.msg.Pose())
-    ## output: plan from current  pose to the target one
-    try:
-      self.group[0].set_pose_target(target_pose)
-      self.group[0].set_planner_id(self.planner)
-      planAns=self.group[0].plan()
-      return planAns
+
+
+  def plan_targetInputWaypoint(self, targets, joint_flag, merged=False):
+    '''Generic target planner that what type is specified'''
+    ## input: list of pose (geometry_msgs.msg.Pose())
+    ## output: plan from current  pose all of the target poses
+    ## If merge true - then a single large plan is returned
+    ## If merge is false - then several plans in an array are returned
+
+    # Plan each pose individually and stitch together
+    try: 
+      full_plan = []
+      points = []
+      current_state = self.robot.get_current_state()
+      for target in targets:
+          self.group[0].set_start_state(current_state)
+	  plan = self.plan_targetInput(target, joint_flag)
+          if plan is not None:
+              full_plan.append(plan)
+	      if merged:
+		points = self.merge_points(points, plan.joint_trajectory.points)
+	      traj = plan.joint_trajectory
+              current_state = self.set_robot_state_pose(traj)
+          else:
+              print 'No full plan found, see the moveit terminal for the error'
+              return None
+
+      if merged:
+	plan = full_plan[0]
+	plan.joint_trajectory.points = points
+	return plan
+      else:
+	return full_plan
     except:
       print 'No plan found, see the moveit terminal for the error'
       print("Unexpected error:", sys.exc_info()[0])
       return None
- 
+
+
+  def set_robot_state_pose(self, traj):
+    '''Gets the current robot state pose and sets it to the joint pose'''
+    cur_robot_state = self.robot.get_current_state()
+    last_point = traj.points[-1].positions
+    # convert the joints to array
+    joints = [x for x in cur_robot_state.joint_state.position]
+    for i in xrange(len(traj.joint_names)):
+	# Find index of joint
+	joint_name = traj.joint_names[i]
+	idx = cur_robot_state.joint_state.name.index(joint_name)
+	joints[idx] = last_point[i]
+
+    # Set full joint tuple now
+    cur_robot_state.joint_state.position = joints
+
+    return cur_robot_state
+
+  def merge_points(self, points, new_points):
+    '''Merge two sets of points and taking into account time'''
+    # Check if this is the first set
+    if len(points) < 1:
+      return new_points
+
+    all_points = points
+    # Pull out the last time from current points
+    last_point_time = points[-1].time_from_start+rospy.Duration(0.1)
+    for point in new_points:
+      point.time_from_start = point.time_from_start+last_point_time
+      all_points = all_points + [point]
+    return all_points
+
   def _simplify_angle(self, angle):
     # Very simple function that makes sure the angles are between -pi and pi
     if angle > pi:
@@ -163,6 +222,35 @@ class ArmMoveIt:
 	else:
 	  simplified_joints.append(a)
     return simplified_joints
+
+  '''Older functions - left for backwards compatibility'''
+
+  def plan_jointTargetInput(self,target_joint):
+    ## input: target joint angles (list) of the robot
+    ## output: plan from current joint angles to the target one
+    try:
+      self.group[0].set_joint_value_target(self._simplify_joints(target_joint))
+      self.group[0].set_planner_id(self.planner)
+      planAns=self.group[0].plan()
+      return planAns
+    except:
+      print 'No plan found, see the moveit terminal for the error'
+      print("Unexpected error:", sys.exc_info()[0])
+      return None
+
+  def plan_poseTargetInput(self,target_pose):
+    ## input: tart pose (geometry_msgs.msg.Pose())
+    ## output: plan from current  pose to the target one
+    try:
+      self.group[0].set_pose_target(target_pose)
+      self.group[0].set_planner_id(self.planner)
+      planAns=self.group[0].plan()
+      return planAns
+    except:
+      print 'No plan found, see the moveit terminal for the error'
+      print("Unexpected error:", sys.exc_info()[0])
+      return None
+ 
  
   def box_table_scene(self) :
     
