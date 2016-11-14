@@ -14,6 +14,17 @@ from math import pi, floor, ceil, fabs
 class ArmMoveIt:
 
   def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
+
+    # Make sure the moveit service is up and running
+    rospy.logwarn("Waiting for MoveIt! to load")
+    try:
+      rospy.wait_for_service('compute_ik')
+    except rospy.ROSExecption, e:
+      rospy.logerr("No moveit service detected. Exiting")
+      exit()
+    else:
+      rospy.loginfo("MoveIt detected: arm planner loading")
+
     # self.pose = geometry_msgs.msg.PoseStamped()
     ## Instantiate a RobotCommander object.  This object is an interface to
     ## the robot as a whole.
