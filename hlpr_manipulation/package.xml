@@ -14,10 +14,11 @@
   <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>hlpr_manipulation_actions</run_depend>
   <run_depend>hlpr_manipulation_utils</run_depend>
   <run_depend>hlpr_trac_ik</run_depend>
   <run_depend>hlpr_wpi_jaco_moveit_config</run_depend>
-  
+
   <export>
     <metapackage />
   </export>
