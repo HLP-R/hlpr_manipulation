@@ -39,7 +39,7 @@ class ArmMoveIt:
     self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
     # NOTE: order that moveit currently is configured
     # ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
-    self.continous_joints_list = [0,3,4,5] # joints that are continous
+    self.continuous_joints_list = [0,3,4,5] # joints that are continous
 
   def get_IK(self, newPose, root = None):
     ## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)
@@ -217,7 +217,7 @@ class ArmMoveIt:
       simplified_joints = []
       for i in xrange(len(joint_dict)):
 	a = joint_dict[i]
-	if i in self.continuous_joints:
+	if i in self.continuous_joints_list:
 	  simplified_joints.append(self._simplify_angle(a))
 	else:
 	  simplified_joints.append(a)
