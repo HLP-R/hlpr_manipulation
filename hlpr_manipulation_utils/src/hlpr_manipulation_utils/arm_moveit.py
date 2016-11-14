@@ -217,7 +217,7 @@ class ArmMoveIt:
       simplified_joints = []
       for i in xrange(len(joint_dict)):
 	a = joint_dict[i]
-	if i in self.continuous_joints_list:
+	if i in self.continuous_joints:
 	  simplified_joints.append(self._simplify_angle(a))
 	else:
 	  simplified_joints.append(a)
