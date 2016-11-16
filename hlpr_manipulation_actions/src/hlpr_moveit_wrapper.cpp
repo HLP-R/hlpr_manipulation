@@ -183,6 +183,7 @@ void HlprMoveitWrapper::moveToPose(const rail_manipulation_msgs::MoveToPoseGoalC
 void HlprMoveitWrapper::moveToJointPose(const rail_manipulation_msgs::MoveToJointPoseGoalConstPtr &goal)
 {
   //extract joint states
+  /*
   int jacoStartIndex = 0;
   for (unsigned int i = 0; i < jointState.name.size(); i++)
   {
@@ -207,6 +208,70 @@ void HlprMoveitWrapper::moveToJointPose(const rail_manipulation_msgs::MoveToJoin
     else
       jacoArmGroup->setJointValueTarget(jointState.name[i], goal->joints[i - jacoStartIndex]);
   }
+  */
+  
+  //extract joint states
+  int shoulderPanIndex = 0;
+  int shoulderLiftIndex = 0;
+  int elbowIndex = 0;
+  int wrist1Index = 0;
+  int wrist2Index = 0;
+  int wrist3Index = 0;
+
+  for (unsigned int i = 0; i < jointState.name.size(); i++)
+  {
+    if (jointState.name[i].compare("right_shoulder_pan_joint") == 0)
+    {
+      shoulderPanIndex = i;
+    }
+    if (jointState.name[i].compare("right_shoulder_lift_joint") == 0)
+    {
+      shoulderLiftIndex = i;
+    }
+    if (jointState.name[i].compare("right_elbow_joint") == 0)
+    {
+      elbowIndex = i;
+    }
+    if (jointState.name[i].compare("right_wrist1_joint") == 0)
+    {
+      wrist1Index = i;
+    }
+    if (jointState.name[i].compare("right_wrist2_joint") == 0)
+    {
+      wrist2Index = i;
+    }
+    if (jointState.name[i].compare("right_wrist3_joint") == 0)
+    {
+      wrist3Index = i;
+    }
+  }
+  
+  
+  for (unsigned int i = 0; i < goal->joints.size(); i ++)
+  {
+    cout << goal->joints[i] << " ";
+  }
+  cout << endl;
+
+  //set planning goal for joints to be closest to current joint positions
+  jacoArmGroup->setJointValueTarget(jointState.name[shoulderPanIndex], nearest_equivalent(simplify_angle(goal->joints[0]),
+                                                                                          jointState.position[shoulderPanIndex]));
+
+  jacoArmGroup->setJointValueTarget(jointState.name[1], goal->joints[shoulderLiftIndex]);
+
+  jacoArmGroup->setJointValueTarget(jointState.name[2], goal->joints[elbowIndex]);
+
+  jacoArmGroup->setJointValueTarget(jointState.name[wrist1Index], nearest_equivalent(simplify_angle(goal->joints[3]),
+                                                                                          jointState
+                                                                                              .position[wrist1Index]));
+
+  jacoArmGroup->setJointValueTarget(jointState.name[wrist2Index], nearest_equivalent(simplify_angle(goal->joints[4]),
+                                                                                     jointState
+                                                                                         .position[wrist2Index]));
+
+  jacoArmGroup->setJointValueTarget(jointState.name[wrist3Index], nearest_equivalent(simplify_angle(goal->joints[5]),
+                                                                                     jointState
+                                                                                         .position[wrist3Index]));
 
   //plan and execute
   rail_manipulation_msgs::MoveToJointPoseResult result;
