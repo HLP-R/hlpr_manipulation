@@ -122,11 +122,13 @@ class Arm:
     
     self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
     
+    rospy.loginfo("Waiting for arm trajectory server")
     #if(self.smooth_joint_trajectory_client.wait_for_server(rospy.Duration(5.0))):
     if(self.smooth_joint_trajectory_client.wait_for_server()):
       self.traj_connection = True
     else:
       self.traj_connection = False
+    rospy.loginfo("Arm trajectory server loaded")
 
     print self.traj_connection
 

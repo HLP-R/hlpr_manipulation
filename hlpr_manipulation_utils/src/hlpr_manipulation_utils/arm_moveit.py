@@ -121,9 +121,9 @@ class ArmMoveIt:
     '''Generic target planner that what type is specified'''
     try:
       if (joint_flag):
-	self.group[0].set_joint_value_target(self._simplify_joints(target))
+        self.group[0].set_joint_value_target(self._simplify_joints(target))
       else:
-	self.group[0].set_pose_target(target)
+        self.group[0].set_pose_target(target)
 
       self.group[0].set_planner_id(self.planner)
       planAns=self.group[0].plan()
@@ -134,7 +134,7 @@ class ArmMoveIt:
       return None
 
 
-  def plan_targetInputWaypoint(self, targets, joint_flag, merged=False):
+  def plan_targetInputWaypoint(self, targets, joint_flag, merged=False, current_joints=None):
     '''Generic target planner that what type is specified'''
     ## input: list of pose (geometry_msgs.msg.Pose())
     ## output: plan from current  pose all of the target poses
@@ -146,30 +146,32 @@ class ArmMoveIt:
       full_plan = []
       points = []
       current_state = self.robot.get_current_state()
+      if current_joints is not None:
+          current_state = self.set_robot_state_joint_dict(current_joints)
       for target in targets:
-          self.group[0].set_start_state(current_state)
-	  plan = self.plan_targetInput(target, joint_flag)
-          if plan is not None:
-              full_plan.append(plan)
-	      if merged:
-		points = self.merge_points(points, plan.joint_trajectory.points)
-	      traj = plan.joint_trajectory
-              current_state = self.set_robot_state_pose(traj)
-          else:
-              print 'No full plan found, see the moveit terminal for the error'
-              return None
+        self.group[0].set_start_state(current_state)
+        plan = self.plan_targetInput(target, joint_flag)
+        if plan is not None:
+          full_plan.append(plan)
+          if merged:
+            points = self.merge_points(points, plan.joint_trajectory.points)
+          traj = plan.joint_trajectory
+          current_state = self.set_robot_state_pose(traj)
+        else:
+          print 'No full plan found, see the moveit terminal for the error'
+          return None
 
       if merged:
-	plan = full_plan[0]
-	plan.joint_trajectory.points = points
-	return plan
+        plan = full_plan[0]
+        plan.joint_trajectory.points = points
+        return plan
       else:
-	return full_plan
+        return full_plan
+
     except:
       print 'No plan found, see the moveit terminal for the error'
       print("Unexpected error:", sys.exc_info()[0])
       return None
-
 
   def set_robot_state_pose(self, traj):
     '''Gets the current robot state pose and sets it to the joint pose'''
@@ -178,16 +180,26 @@ class ArmMoveIt:
     # convert the joints to array
     joints = [x for x in cur_robot_state.joint_state.position]
     for i in xrange(len(traj.joint_names)):
-	# Find index of joint
-	joint_name = traj.joint_names[i]
-	idx = cur_robot_state.joint_state.name.index(joint_name)
-	joints[idx] = last_point[i]
+      # Find index of joint
+      joint_name = traj.joint_names[i]
+      idx = cur_robot_state.joint_state.name.index(joint_name)
+      joints[idx] = last_point[i]
 
     # Set full joint tuple now
     cur_robot_state.joint_state.position = joints
 
     return cur_robot_state
 
+  def set_robot_state_joint_dict(self, joint_dict):
+    cur_robot_state = self.robot.get_current_state()
+    joints = [x for x in cur_robot_state.joint_state.position]
+    for joint_name in joint_dict:
+        idx = cur_robot_state.joint_state.name.index(joint_name)
+        joints[idx] = joint_dict[joint_name]
+
+    cur_robot_state.joint_state.position = joints
+    return cur_robot_state
+    
   def merge_points(self, points, new_points):
     '''Merge two sets of points and taking into account time'''
     # Check if this is the first set
@@ -218,20 +230,20 @@ class ArmMoveIt:
     if isinstance(joint_dict, dict):
       simplified_joints = dict()
       for joint in joint_dict:
-	# Pull out the name of the joint
-	joint_name = '_'.join(joint.split('_')[1::])
-	if joint_name in self.continuous_joints:
-	  simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
-	else:
-	  simplified_joints[joint] = joint_dict[joint]
+        # Pull out the name of the joint
+        joint_name = '_'.join(joint.split('_')[1::])
+        if joint_name in self.continuous_joints:
+          simplified_joints[joint] = self._simplify_angle(joint_dict[joint])
+        else:
+          simplified_joints[joint] = joint_dict[joint]
     elif isinstance(joint_dict, list):
       simplified_joints = []
       for i in xrange(len(joint_dict)):
-	a = joint_dict[i]
-	if i in self.continuous_joints_list:
-	  simplified_joints.append(self._simplify_angle(a))
-	else:
-	  simplified_joints.append(a)
+        a = joint_dict[i]
+        if i in self.continuous_joints_list:
+          simplified_joints.append(self._simplify_angle(a))
+        else:
+          simplified_joints.append(a)
     return simplified_joints
 
   '''Older functions - left for backwards compatibility'''
