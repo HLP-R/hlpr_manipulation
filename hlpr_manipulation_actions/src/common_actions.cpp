@@ -84,10 +84,14 @@ void CommonActions::executePickup(const rail_manipulation_msgs::PickupGoalConstP
   tfBroadcaster.sendTransform(tf::StampedTransform(graspTransform, now, "base_link", "grasp_frame"));
   tfListener.waitForTransform("grasp_frame", "base_link", now, ros::Duration(5.0));
 
-  approachAnglePose.header.frame_id = "grasp_frame";
-  approachAnglePose.pose.position.x = -0.05;
-  approachAnglePose.pose.orientation.w = 1.0;
+  geometry_msgs::PoseStamped approachAnglePoseGraspFrame;
+  approachAnglePoseGraspFrame.header.frame_id = "grasp_frame";
+  approachAnglePoseGraspFrame.pose.position.x = -0.05;
+  approachAnglePoseGraspFrame.pose.orientation.w = 1.0;
 
+  approachAnglePose.header.frame_id = "base_link";
+
+  tfListener.transformPose("base_link", approachAnglePoseGraspFrame, approachAnglePose);
   //move to approach angle
   ss.str("");
   ss << "Attempting to move gripper to approach angle...";
@@ -99,6 +103,7 @@ void CommonActions::executePickup(const rail_manipulation_msgs::PickupGoalConstP
   approachAngleGoal.planningTime = 3.0;
   moveToPoseClient.sendGoal(approachAngleGoal);
   moveToPoseClient.waitForResult(ros::Duration(30.0));
+
   if (!moveToPoseClient.getResult()->success)
   {
     ss.str("");
@@ -166,7 +171,7 @@ void CommonActions::executePickup(const rail_manipulation_msgs::PickupGoalConstP
     }
   }
   //nearby pose unconstrained planning approach, less strict than linear planning
-  /*
+
   rail_manipulation_msgs::MoveToPoseGoal graspPoseGoal;
   graspPoseGoal.pose = graspPose;
   graspPoseGoal.jointStateDifference = M_PI/2.0;
@@ -187,7 +192,6 @@ void CommonActions::executePickup(const rail_manipulation_msgs::PickupGoalConstP
     pickupServer.setAborted(result, "Unable to move to approach angle.");
     return;
   }
-  */
 
   //close gripper
   ss.str("");
@@ -261,7 +265,6 @@ void CommonActions::executePickup(const rail_manipulation_msgs::PickupGoalConstP
   {
     result.success = true;
   }
-
   pickupServer.setSucceeded(result);
 }
 
