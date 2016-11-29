@@ -8,15 +8,15 @@ HlprMoveitWrapper::HlprMoveitWrapper() :
     moveToPoseServer(pnh, "move_to_pose", boost::bind(&HlprMoveitWrapper::moveToPose, this, _1), false),
     moveToJointPoseServer(pnh, "move_to_joint_pose", boost::bind(&HlprMoveitWrapper::moveToJointPose, this, _1), false)
 {
-  gripperNames.push_back("robotiq_85_base_link");
-  gripperNames.push_back("robotiq_85_left_finger_link");
-  gripperNames.push_back("robotiq_85_left_finger_tip_link");
-  gripperNames.push_back("robotiq_85_left_inner_knuckle_link");
-  gripperNames.push_back("robotiq_85_left_knuckle_link");
-  gripperNames.push_back("robotiq_85_right_finger_link");
-  gripperNames.push_back("robotiq_85_right_finger_tip_link");
-  gripperNames.push_back("robotiq_85_right_inner_knuckle_link");
-  gripperNames.push_back("robotiq_85_right_knuckle_link");
+  gripperNames.push_back("right_robotiq_85_base_link");    //Fixed gripper names to be consistent with vector
+  gripperNames.push_back("right_robotiq_85_left_finger_link");
+  gripperNames.push_back("right_robotiq_85_left_finger_tip_link");
+  gripperNames.push_back("right_robotiq_85_left_inner_knuckle_link");
+  gripperNames.push_back("right_robotiq_85_left_knuckle_link");
+  gripperNames.push_back("right_robotiq_85_right_finger_link");
+  gripperNames.push_back("right_robotiq_85_right_finger_tip_link");
+  gripperNames.push_back("right_robotiq_85_right_inner_knuckle_link");
+  gripperNames.push_back("right_robotiq_85_right_knuckle_link");
 
   ignoredObject = "";
 
@@ -123,7 +123,7 @@ void HlprMoveitWrapper::moveToPose(const rail_manipulation_msgs::MoveToPoseGoalC
     {
       int jointStateIndex = distance(jointState.name.begin(), find(jointState.name.begin(), jointState.name.end(), ikRes.solution.joint_state.name[i]));
       double value;
-      if (ikRes.solution.joint_state.name[i] == "jaco_shoulder_lift_joint" || ikRes.solution.joint_state.name[i] == "jaco_elbow_joint")
+      if (ikRes.solution.joint_state.name[i] == "right_shoulder_lift_joint" || ikRes.solution.joint_state.name[i] == "right_elbow_joint")
         value = ikRes.solution.joint_state.position[i];
       else
         value = nearest_equivalent(simplify_angle(ikRes.solution.joint_state.position[i]), jointState.position[jointStateIndex]);
@@ -282,6 +282,8 @@ bool HlprMoveitWrapper::cartesianPathCallback(rail_manipulation_msgs::CartesianP
   {
     geometry_msgs::PoseStamped tempPose;
     tempPose.header.frame_id = jacoArmGroup->getPoseReferenceFrame();
+    // Added wait for transform to solve extrapolation in the past error
+    tf.waitForTransform(tempPose.header.frame_id , req.waypoints[i].header.frame_id, ros::Time::now(), ros::Duration(5.0));
     tf.transformPose(jacoArmGroup->getPoseReferenceFrame(), req.waypoints[i], tempPose);
     convertedWaypoints.push_back(tempPose.pose);
   }
@@ -358,7 +360,7 @@ bool HlprMoveitWrapper::cartesianPathCallback(rail_manipulation_msgs::CartesianP
 
   executionFinished = false;
   ros::Rate loopRate(30);
-  ros::Time timeout = ros::Time::now() + ros::Duration(1.5);
+  ros::Time timeout = ros::Time::now() + ros::Duration(5.0); //Changed from 1.5 to 5.0
   res.success = true;
   while (!executionFinished)
   {
@@ -605,17 +607,18 @@ bool HlprMoveitWrapper::attachClosestSceneObject(std_srvs::Empty::Request &req, 
   graspingState.object_name = objectList.objects[closest].name;
   graspingStatePublisher.publish(graspingState);
 
+  //Corrected the names to be consistent with vector
   vector<string> touchLinks;
   touchLinks.push_back("right_ee_link");
-  touchLinks.push_back("robotiq_85_base_link");
-  touchLinks.push_back("robotiq_85_left_finger_link");
-  touchLinks.push_back("robotiq_85_left_finger_tip_link");
-  touchLinks.push_back("robotiq_85_left_inner_knuckle_link");
-  touchLinks.push_back("robotiq_85_left_knuckle_link");
-  touchLinks.push_back("robotiq_85_right_finger_link");
-  touchLinks.push_back("robotiq_85_right_finger_tip_link");
-  touchLinks.push_back("robotiq_85_right_inner_knuckle_link");
-  touchLinks.push_back("robotiq_85_right_knuckle_link");
+  touchLinks.push_back("right_robotiq_85_base_link");
+  touchLinks.push_back("right_robotiq_85_left_finger_link");
+  touchLinks.push_back("right_robotiq_85_left_finger_tip_link");
+  touchLinks.push_back("right_robotiq_85_left_inner_knuckle_link");
+  touchLinks.push_back("right_robotiq_85_left_knuckle_link");
+  touchLinks.push_back("right_robotiq_85_right_finger_link");
+  touchLinks.push_back("right_robotiq_85_right_finger_tip_link");
+  touchLinks.push_back("right_robotiq_85_right_inner_knuckle_link");
+  touchLinks.push_back("right_robotiq_85_right_knuckle_link");
   jacoArmGroup->attachObject(unattachedObjects[closest], jacoArmGroup->getEndEffectorLink(), touchLinks);
   attachedObjects.push_back(unattachedObjects[closest]);
   unattachedObjects.erase(unattachedObjects.begin() + closest);

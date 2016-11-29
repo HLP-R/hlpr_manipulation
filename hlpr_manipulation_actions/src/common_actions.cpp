@@ -89,9 +89,10 @@ void CommonActions::executePickup(const rail_manipulation_msgs::PickupGoalConstP
   approachAnglePoseGraspFrame.pose.position.x = -0.05;
   approachAnglePoseGraspFrame.pose.orientation.w = 1.0;
 
+  // Fix for IK failure while looking up grasp_frame. Transforming back to base_link.
   approachAnglePose.header.frame_id = "base_link";
-
   tfListener.transformPose("base_link", approachAnglePoseGraspFrame, approachAnglePose);
+
   //move to approach angle
   ss.str("");
   ss << "Attempting to move gripper to approach angle...";
