@@ -5,6 +5,7 @@
     <arg name="use_wpi_jaco_exec" default="false" />
     <arg name="sim" default="false" />
     <arg name="use_octomap" default="false" />
+    <arg name="custom_sdf" default="$(find hlpr_wpi_jaco_moveit_config)/config/vector.srdf" />
 
 
     <group if="$(arg wpi_jaco_launch)">
@@ -29,6 +30,7 @@
         <arg name="info" value="true"/>
         <arg name="debug" value="false"/>
         <arg name="use_octomap" value="$(arg use_octomap)"/>
+        <arg name="custom_sdf" value="$(arg custom_sdf)"/>
     </include>
 
     <include file="$(find hlpr_wpi_jaco_moveit_config_two_arms)/launch/move_group.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
