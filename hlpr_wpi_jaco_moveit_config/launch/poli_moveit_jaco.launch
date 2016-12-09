@@ -13,7 +13,7 @@
             <arg name="use_wpi_jaco_exec" value="true"/>
             <arg name="sim" value="$(arg sim)"/>
             <arg name="use_octomap" value="false"/>
-            <arg name="custom_sdf" value="$(find hlpr_wpi_jaco_moveit_config)/config/poli.srdf" />
+            <arg name="custom_sdf" value="$(find poli_moveit_config)/config/vector.srdf" />
     </include>
 
 </launch>
