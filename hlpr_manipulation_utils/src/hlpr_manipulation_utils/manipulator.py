@@ -388,6 +388,11 @@ class Arm:
     self.smooth_joint_trajectory_client.wait_for_result()   
     self.smooth_joint_trajectory_client.get_result() 
 
+  def vis_tuck(self):
+    return self.execute_traj_moveit([[-2.40, 1.0, 0.41, -2.25, 3.0, 0.71]])
+
+  def ready_pose(self):
+    return self.execute_traj_moveit([[-5.37,5.22,3.66,-5.6,-1.99,-0.51]])
 
 #TODO: figure this out
   def upper_tuck(self, use_moveit=True, vanilla = False):

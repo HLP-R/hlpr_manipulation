@@ -1,6 +1,11 @@
 <launch>
 
-  <include file="$(find hlpr_wpi_jaco_moveit_config)/launch/planning_context.launch" />
+  <!-- If we want to use the same package but with different srdf -->
+  <arg name="custom_sdf" default="$(find hlpr_wpi_jaco_moveit_config)/config/vector.srdf" />
+
+  <include file="$(find hlpr_wpi_jaco_moveit_config)/launch/planning_context.launch" >
+	<arg name="custom_sdf" value="$(arg custom_sdf)"/>
+  </include>
 
   <!-- GDB Debug Option -->
   <arg name="debug" default="false" />
