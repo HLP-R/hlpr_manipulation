@@ -11,6 +11,11 @@ TRAC_IK::TRAC_IK *solver;
 bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
          hlpr_trac_ik::IKHandler::Response &res)
 {
+
+  // Flag if we failed
+  bool succeed = true;
+
+  // Get the number of poses requested
   int poseLen = req.origin.size();
 
   //convert seed pose to KDL::JntArray format
@@ -41,8 +46,10 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
     KDL::Vector rotTol(req.tolerance[3],req.tolerance[4],req.tolerance[5]);
     KDL::Twist tol(posTol, rotTol);
     int status = solver->CartToJnt(prev, goalPose, prev, tol);
-    if(status < 0)
-  	ROS_INFO("IK failed");
+    if(status < 0){
+      ROS_INFO("IK failed");
+      succeed = false;
+    }
 
     //add IK result to service response
     std::string poseStr = "";
@@ -53,6 +60,7 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
       poseStr += std::to_string(val) += " ";
     }
     res.poses.push_back(pt);
+    res.success = succeed;
     ROS_INFO("sending back response: %s", poseStr.c_str());
   }
   return true;
@@ -60,11 +68,33 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
 
 int main(int argc, char **argv)
 {
+  // Initialize the ik service
   ros::init(argc, argv, "hlpr_trac_ik_server");
   ros::NodeHandle n;
+  ros::NodeHandle nh("~"); // Private handler for parameters
 
-  solver = new TRAC_IK::TRAC_IK("linear_actuator_link", "right_ee_link", "/robot_description",0.005,1e-5, TRAC_IK::Distance);
+  // Store parameters from the param server
+  std::string _base_chain;
+  std::string _end_chain;
+  double _timeout_in_secs;
+  double _error;
+  bool _dist_flag;
 
+  // Get parameters for the IK solver
+  nh.param("base_chain", _base_chain, std::string("linear_actuator_link"));
+  nh.param("end_chain", _end_chain, std::string("right_ee_link"));
+  nh.param("timeout_in_sec", _timeout_in_secs, 0.005);
+  nh.param("error", _error, 1e-5);
+  nh.param("distance_flag", _dist_flag, false);
+
+  // Create track IK solver
+  if (_dist_flag){
+    solver = new TRAC_IK::TRAC_IK(_base_chain, _end_chain, "/robot_description", _timeout_in_secs, _error, TRAC_IK::Distance);
+  } else {
+    solver = new TRAC_IK::TRAC_IK(_base_chain, _end_chain, "/robot_description", _timeout_in_secs, _error, TRAC_IK::Speed);
+  }
+
+  // Create the service call
   ros::ServiceServer service = n.advertiseService("hlpr_trac_ik", getPose);
   ROS_INFO("IK wrapper ready.");
   ros::spin();
