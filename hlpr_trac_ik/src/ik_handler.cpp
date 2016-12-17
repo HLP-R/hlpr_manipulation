@@ -15,6 +15,9 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
   // Flag if we failed
   bool succeed = true;
 
+  // Pull out of we want to be verbose
+  bool verbose = req.verbose;
+
   // Get the number of poses requested
   int poseLen = req.origin.size();
 
@@ -38,8 +41,10 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
         +  " " + std::to_string(goals[p].orientation.x) + " " + std::to_string(goals[p].orientation.y)
         + " " + std::to_string(goals[p].orientation.z) + " " + std::to_string(goals[p].orientation.w);
 
-    ROS_INFO("request: seed=%s goal=%s", seedStr.c_str(), goalStr.c_str());
- 
+    if (verbose){
+      ROS_INFO("request: seed=%s goal=%s", seedStr.c_str(), goalStr.c_str());
+    } 
+
     //set tolerances and send IK request
     KDL::Vector posTol(req.tolerance[0],req.tolerance[1],req.tolerance[2]);
     float max = std::numeric_limits<float>::max();
@@ -47,7 +52,7 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
     KDL::Twist tol(posTol, rotTol);
     int status = solver->CartToJnt(prev, goalPose, prev, tol);
     if(status < 0){
-      ROS_INFO("IK failed");
+      ROS_WARN("HLP-R IK failed");
       succeed = false;
     }
 

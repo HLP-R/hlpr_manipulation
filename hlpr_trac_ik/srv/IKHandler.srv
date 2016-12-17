@@ -1,6 +1,7 @@
 float32[] origin
 geometry_msgs/Pose[] goals
 float32[] tolerance
+bool verbose
 ---
 trajectory_msgs/JointTrajectoryPoint[] poses
 bool success
