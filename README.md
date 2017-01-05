@@ -1,4 +1,4 @@
-# hlpr_manipulation
+# hlpr_manipulation [![Build Status](https://api.travis-ci.org/HLP-R/hlpr_manipulation.png)](https://travis-ci.org/HLP-R/hlpr_manipulation)
 
 This metapackage contains all the packages related to manipulation for the HLP-R platform
 
