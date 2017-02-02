@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="moveit_wrapper" default="true"/>
+    <arg name="primitive_actions" default="true"/>
+    <arg name="common_actions" default="true"/>
+
+    <node name="moveit_wrapper" pkg="hlpr_manipulation_actions" type="hlpr_moveit_wrapper" respawn="false" output="screen" if="$(arg moveit_wrapper)"/>
+
+    <node name="primitive_actions" pkg="hlpr_manipulation_actions" type="primitive_actions" respawn="false" output="screen" if="$(arg primitive_actions)"/>
+
+    <node name="common_actions" pkg="hlpr_manipulation_actions" type="common_actions" respawn="false" output="screen" if="$(arg common_actions)"/>
+
+
+</launch>

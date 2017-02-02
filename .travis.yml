@@ -107,6 +107,7 @@ before_script:
   # source dependencies: install using wstool.
   - cd ~/catkin_ws/src
   - git clone https://github.com/StanleyInnovation/vector_v1.git # change later
+  - git clone https://github.com/GT-RAIL/rail_manipulation_msgs.git
   - wstool init
   - if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi
   - wstool up
