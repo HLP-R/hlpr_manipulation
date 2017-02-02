@@ -1,9 +1,9 @@
 <launch>
 
     <!-- Warning: if you set use_wpi_jaco_exec false, you cannot execute a trajectory through moveit --> 
-    <arg name="wpi_jaco_launch" default="false" />
-    <arg name="use_wpi_jaco_exec" default="false" />
-    <arg name="sim" default="false" />
+    <arg name="wpi_jaco_launch" default="true" />
+    <arg name="use_wpi_jaco_exec" default="true" />
+    <arg name="sim" default="true" />
 
 
     <group if="$(arg wpi_jaco_launch)">
