@@ -13,7 +13,7 @@ from math import pi, floor, ceil, fabs
 
 class ArmMoveIt:
 
-  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
+  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault", arm_prefix='right'):
 
     # Make sure the moveit service is up and running
     rospy.logwarn("Waiting for MoveIt! to load")
@@ -38,7 +38,9 @@ class ArmMoveIt:
     ## to one group of joints.  In this case the group is the joints in the left
     ## arm.  This interface can be used to plan and execute motions on the left
     ## arm.
-    self.group = [moveit_commander.MoveGroupCommander("arm")]
+    self.group = [moveit_commander.MoveGroupCommander(arm_prefix+'_arm')]
+    
+    self._arm_prefix = arm_prefix
 
     # Set the planner
     self.planner = default_planner
@@ -92,7 +94,7 @@ class ArmMoveIt:
     header = std_msgs.msg.Header()
     header.frame_id = root
     header.stamp = rospy.Time.now()
-    fk_link_names = ['right_ee_link']
+    fk_link_names = [self._arm_prefix + '_ee_link']
     robot_state = self.robot.get_current_state()    
     try:
       reply=compute_fk(header,fk_link_names,robot_state)
@@ -103,8 +105,12 @@ class ArmMoveIt:
 
   def get_FK_wpi(self, joints = None):
 
-    rospy.wait_for_service('/jaco_arm/kinematics/fk')
-    compute_fk = rospy.ServiceProxy('/jaco_arm/kinematics/fk', wpi_jaco_msgs.srv.JacoFK)
+    if self._arm_prefix == left:
+    	rospy.wait_for_service('/vector/jaco_arm/kinematics/fk')
+    	compute_fk = rospy.ServiceProxy('/vector/jaco_arm/kinematics/fk', wpi_jaco_msgs.srv.JacoFK)
+    else:
+    	rospy.wait_for_service('/jaco_arm/kinematics/fk')
+    	compute_fk = rospy.ServiceProxy('/jaco_arm/kinematics/fk', wpi_jaco_msgs.srv.JacoFK)
 
     if joints is None:
       joints = [pi,pi,pi,pi,pi,pi,pi]    

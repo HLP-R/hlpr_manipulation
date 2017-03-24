@@ -15,8 +15,8 @@ import time
 
 class Manipulator:
   def __init__(self, arm_prefix = 'right'):
-    self.arm = Arm()
-    self.gripper = Gripper()
+    self.arm = Arm(arm_prefix)
+    self.gripper = Gripper(prefix = arm_prefix)
     self.linear_actuator = LinearActuator()
 
 class Gripper:
@@ -110,17 +110,22 @@ class Arm:
   def __init__(self, arm_prefix = 'right'):
     self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
     self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
-    
+        
     self._arm_prefix = arm_prefix
     self.arm_joint_names = [  self._arm_prefix + "_shoulder_pan_joint",   self._arm_prefix + "_shoulder_lift_joint",   self._arm_prefix + "_elbow_joint", 
                               self._arm_prefix + "_wrist_1_joint",   self._arm_prefix + "_wrist_2_joint",   self._arm_prefix + "_wrist_3_joint"]
 
     self.joint_states = [0 for i in range(0,len( self.arm_joint_names))]
     
-    rospy.Subscriber('/vector/right_arm/joint_states', JointState, self.js_cb)
+    rospy.Subscriber('/vector/' + arm_prefix + '_arm/joint_states', JointState, self.js_cb)
     self.last_js_update = None
     
     self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
+    
+    if arm_prefix=='left':
+    	self.pub_jaco_ang  = rospy.Publisher('/vector/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
+   	self.pub_jaco_cart = rospy.Publisher('/vector/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
+    	self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/vector/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
     
     rospy.loginfo("Waiting for arm trajectory server")
     #if(self.smooth_joint_trajectory_client.wait_for_server(rospy.Duration(5.0))):
@@ -150,7 +155,7 @@ class Arm:
     self.gc_connection = False    
 #    self.grav_comp_client = rospy.ServiceProxy('/jaco_arm/grav_comp', GravComp)
  
-    self.arm_planner = ArmMoveIt() 
+    self.arm_planner = ArmMoveIt(arm_prefix = self._arm_prefix) 
 
   def _get_arm_joint_values(self, msg):
 

@@ -1,9 +1,9 @@
 <launch>
 
     <!-- Warning: if you set use_wpi_jaco_exec false, you cannot execute a trajectory through moveit --> 
-    <arg name="wpi_jaco_launch" default="false" />
-    <arg name="use_wpi_jaco_exec" default="false" />
-    <arg name="sim" default="false" />
+    <arg name="wpi_jaco_launch" default="true" />
+    <arg name="use_wpi_jaco_exec" default="true" />
+    <arg name="sim" default="true" />
     <arg name="use_octomap" default="false" />
     <arg name="custom_sdf" default="$(find hlpr_wpi_jaco_moveit_config)/config/vector.srdf" />
 
@@ -16,7 +16,7 @@
 
         <group if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
             <!-- Load the wpi_jaco_wrapper launch file for the second arm --> 
-            <include ns="left_arm" file="$(find wpi_jaco_wrapper)/launch/two_arms.launch">
+            <include ns="vector" file="$(find wpi_jaco_wrapper)/launch/two_arms.launch">
                 <arg name="sim" value="$(arg sim)" />
                 <arg name="side" value="left" />
             </include>

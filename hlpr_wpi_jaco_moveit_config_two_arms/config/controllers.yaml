@@ -11,7 +11,7 @@ controller_list:
       - right_wrist_2_joint
       - right_wrist_3_joint
 
-  - name: "left_arm/jaco_arm/joint_velocity_controller"
+  - name: "vector/jaco_arm/joint_velocity_controller"
     action_ns: trajectory
     type: FollowJointTrajectory
     default: true
