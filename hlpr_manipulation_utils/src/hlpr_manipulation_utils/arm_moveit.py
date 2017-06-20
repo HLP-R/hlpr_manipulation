@@ -19,7 +19,7 @@ class ArmMoveIt:
     rospy.logwarn("Waiting for MoveIt! to load")
     try:
       rospy.wait_for_service('compute_ik')
-    except rospy.ROSExecption, e:
+    except rospy.ROSException, e:
       rospy.logerr("No moveit service detected. Exiting")
       exit()
     else:
