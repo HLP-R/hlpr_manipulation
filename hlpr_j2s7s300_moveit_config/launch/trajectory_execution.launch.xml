@@ -15,8 +15,7 @@
   <param name="allowed_start_tolerance" value="0.01"/> <!-- default 0.01 -->
   
   <!-- Load the robot specific controller manager; this sets the moveit_controller_manager ROS parameter -->
-  <!--arg name="moveit_controller_manager" default="vector" /-->
-  <arg name="moveit_controller_manager" default="j2s7s300" />
+  <arg name="moveit_controller_manager" default="vector" />
   <include file="$(find hlpr_j2s7s300_moveit_config)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml" />
   
 </launch>
