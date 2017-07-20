@@ -83,8 +83,8 @@ private:
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener;
 
-  move_group_interface::MoveGroup *jacoArmGroup;
-  move_group_interface::PlanningSceneInterface *planningSceneInterface;
+  moveit::planning_interface::MoveGroupInterface *jacoArmGroup;
+  moveit::planning_interface::PlanningSceneInterface *planningSceneInterface;
   planning_scene_monitor::PlanningSceneMonitorPtr planningSceneMonitor;
 
   boost::recursive_mutex api_mutex;
