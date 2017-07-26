@@ -4,7 +4,7 @@ from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, Gripper
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
 #from wpi_jaco_msgs.srv import GravComp
-from hlpr_manipulation_utils.arm_moveit import *
+from hlpr_manipulation_utils.arm_moveit2 import ArmMoveIt
 
 import rospy
 from math import pi, sqrt
@@ -24,19 +24,9 @@ class Gripper:
     self.pub_grp  = rospy.Publisher('/vector/'+prefix+'_gripper/cmd', GripperCmd, queue_size = 10)
     self.cmd = GripperCmd()
     
-    #i have it here but it is not useful
-    #rospy.Subscriber('/vector/right_gripper/joint_states', JointState, self.js_cb)
-    #self.last_js_update = None
-    #self.joint_state = None
-    
     rospy.Subscriber('/vector/'+prefix+'_gripper/stat', GripperStat, self.st_cb)
     self.last_st_update = None
     self.gripper_stat = GripperStat()
-    
-
-  #def js_cb(self, inState):
-  #  self.joint_state = inState.position  
-  #  self.last_js_update = rospy.get_time()
     
   def st_cb(self, inStat):
     self.gripperStat = inStat
@@ -386,7 +376,7 @@ class Arm:
     traj_goal.trajectory = plannedTraj.joint_trajectory
     self.smooth_joint_trajectory_client.send_goal(traj_goal)
     self.smooth_joint_trajectory_client.wait_for_result()   
-    self.smooth_joint_trajectory_client.get_result() 
+    return self.smooth_joint_trajectory_client.get_result() 
 
   def vis_tuck(self):
     return self.execute_traj_moveit([[-2.40, 1.0, 0.41, -2.25, 3.0, 0.71]])
@@ -460,7 +450,7 @@ class Arm:
     self.ut_wps = [ut_wp0,ut_wp1,ut_wp2,ut_wp3]
     self.un_ut_wps = self.ut_wps[::-1]
     
-    self.tuck_network          = self.un_lt_wps + [self.mid_wp] + self.ut_wps
+    self.tuck_network = self.un_lt_wps + [self.mid_wp] + self.ut_wps
     self.reversed_tuck_network = self.tuck_network[::-1]
     
   def _find_closest_tuck_wp(self, tuck_wps, max_allowed_dist = 8.0):
