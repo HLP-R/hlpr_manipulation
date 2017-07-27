@@ -16,10 +16,13 @@ class ArmMoveIt:
     """ MoveIt! wrapper for planning for the HLP-R robot's arm(s).
 
     This class provides a simplified interface to the planning capabilities of
-    the MoveIt! ROS packages.  This class does not provide an interface to move
-    the kinova arm; once you've obtained a plan with this class, you can move
-    the arm using the execute_plan_traj function in the Arm class from 
-    hlpr_manipulation_utils.manipulator
+    the MoveIt! ROS packages.  To plan to a specific joint configuration::
+    
+        a = ArmMoveit()
+        pose = [pi,pi,pi,pi]
+    
+        a.goto_pose(pose,is_joint_pos=True)
+
     """
 
     def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
@@ -30,13 +33,16 @@ class ArmMoveIt:
         should work well for most applications; look into the MoveIt! 
         documentation if you think you'd like to change them.
 
-        IMPORTANT: this class maps all commands to the continuous joints
+        **IMPORTANT:** this class maps all commands to the continuous joints
         into (-pi,pi).  For some applications this may result in unexpected
         or undesirable behavior!
 
-        Arguments:
-        planning_frame (string) -- the frame in which MoveIt! should plan
-        default_planner (string) -- which planner to use with MoveIt!
+        Parameters
+        ----------
+        planning_frame : str, optional
+            the frame in which MoveIt! should plan
+        default_planner : str, optional
+            which planner to use with MoveIt!
         """
 
         # Make sure the moveit service is up and running
@@ -77,16 +83,21 @@ class ArmMoveIt:
         Uses MoveIt! to compute the inverse kinematics for a given end
         effector pose.
 
-        Arguments:
-        new_pose (geometry_msgs/Pose) -- the end effector pose
-        root (string) -- the root link (if none is provided, uses the
-            planning frame)
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        new_pose : geometry_msgs/Pose
+            the end effector pose
+        root : string, optional
+            the root link (if none is provided, uses the planning frame)
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
 
-        Return value:
-        (list) -- the joint angles corresponding to the end effector pose
+        Returns
+        ----------
+        list 
+            The joint angles corresponding to the end effector pose
         """
         
         ## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)
@@ -125,12 +136,15 @@ class ArmMoveIt:
         Uses MoveIt! to compute the forward kinematics for a given joint
         configuration.
 
-        Arguments:
-        root (string) -- the root link (if none is provided, uses the
-            planning frame)
+        Parameters
+        ----------
+        root : string, optional
+            the root link (if none is provided, uses the planning frame)
         
-        Returns:
-        (geometry_msgs/PoseStamped) -- the pose of the end effector
+        Returns
+        ----------
+        geometry_msgs/PoseStamped
+            the pose of the end effector
         """
         rospy.wait_for_service('compute_fk')
         compute_fk = rospy.ServiceProxy('compute_fk', moveit_msgs.srv.GetPositionFK)
@@ -153,12 +167,16 @@ class ArmMoveIt:
         Uses the WPI Jaco wrapper to compute the forward kinematics for a 
         given joint configuration.
 
-        Arguments:
-        joints (list) -- the joint positions for which to find the end
-            effector position
+        Parameters
+        ----------
+        joints : list, optional
+            the joint positions for which to find the end effector position.
+            If not provided, gives FK for all joints set to value of pi.
         
-        Returns:
-        (geometry_msgs/PoseStamped) -- the pose of the end effector
+        Returns
+        ----------
+        geometry_msgs/PoseStamped
+            the pose of the end effector
         """
         rospy.wait_for_service('/jaco_arm/kinematics/fk')
         compute_fk = rospy.ServiceProxy('/jaco_arm/kinematics/fk', wpi_jaco_msgs.srv.JacoFK)
@@ -177,19 +195,25 @@ class ArmMoveIt:
         Uses MoveIt! to plan a trajectory to reach a given joint
         configuration
 
-        Arguments:
-        target (list or dict) -- if a list, a list of positions for
-            all active joints in the group; if a dictionary, a mapping
-            of joint names to positions for the joints that should be
-            moved (all other joints will be held at their current angles).
-        starting_config (RobotState) -- the starting configuration to plan
-            from.  If not set, will be set to the current state of the robot.
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        target : list or dict
+            if a list, a list of positions for all active joints 
+            in the group; if a dictionary, a mapping of joint names 
+            to positions for the joints that should be moved (all other 
+            joints will be held at their current angles).
+        starting_config : RobotState, optional
+            the starting configuration to plan from.  If not set, will 
+            be set to the current state of the robot.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
 
-        Returns:
-        (RobotTrajectory) -- the plan for reaching the target position
+        Returns
+        ----------
+        RobotTrajectory
+            the plan for reaching the target position
         """
         
         self.set_start_state(starting_config)
@@ -202,16 +226,22 @@ class ArmMoveIt:
         Uses MoveIt! to plan a trajectory to reach a given end effector
         position
 
-        Arguments:
-        target (geometry_msgs/Pose) -- the desired pose of the end effector
-        starting_config (RobotState) -- the starting configuration to plan
-            from.  If not set, will be set to the current state of the robot.
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        target : geometry_msgs/Pose
+            the desired pose of the end effector
+        starting_config : RobotState, optional
+            the starting configuration to plan from.  If not set, will 
+            be set to the current state of the robot.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
 
-        Returns:
-        (RobotTrajectory) -- the plan for reaching the target position
+        Returns
+        ----------
+        RobotTrajectory
+            the plan for reaching the target position
         """
         
         self.set_start_state(starting_config)
@@ -223,12 +253,14 @@ class ArmMoveIt:
         
         Sets the MoveIt! starting position in preparation for planning
 
-        Arguments:
+        Parameters
+        ----------
         joint_config (RobotState) -- the starting configuration to plan
             from.  If not set, will be set to the current state of the robot.
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
         """
 
         if joint_config!=None:
@@ -246,7 +278,8 @@ class ArmMoveIt:
         
         Sets the MoveIt! target position in preparation for planning
 
-        Arguments:
+        Parameters
+        ----------
         target (list or dict) -- if a list, a list of positions for
             all active joints in the group; if a dictionary, a mapping
             of joint names to positions for the joints that should be
@@ -266,11 +299,14 @@ class ArmMoveIt:
         
         Sets the MoveIt! target position in preparation for planning
 
-        Arguments:
-        target (geometry_msgs/Pose) -- the desired pose of the end effector
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        target : geometry_msgs/Pose
+            the desired pose of the end effector
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
         """
         try:
             self.group[group_id].set_pose_target(target)
@@ -284,13 +320,20 @@ class ArmMoveIt:
         Uses MoveIt! to generate a plan based on the previously-set starting
         position and target position.
 
-        Note: you must set the target and starting position before calling
+        .. note:: You must set the target and starting position before calling
             this function.
         
-        Arguments:
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        RobotTrajectory
+            the plan for reaching the target position
         '''
         try:
             plan =  self.group[group_id].plan()
@@ -299,23 +342,59 @@ class ArmMoveIt:
             return None
         return plan
 
+    def move_robot(self, plan, group_id=0):
+        '''Moves the robot according to a plan
+        
+        Uses MoveIt! to move the arm according to the provided plan.
+
+        .. warning:: The plans can be stitched together, but this can 
+            have unexpected issues since the plan boundaries can violate 
+            acceleration limits.
+        
+        Parameters
+        ----------
+        plan : RobotTrajectory
+            a plan generated by MoveIt!
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        return self.group[group_id].execute(plan)
+
+
     def plan_joint_waypoints(self, targets, group_id=0, starting_config=None):
         '''Generates a multi-segment plan to reach waypoints in joint space
         
         Uses MoveIt! to generate a plan from target to target. One plan is
         generated for each segment.
 
-        Note: The plans can be stitched together, but this can have unexpected
-        issues since the plan boundaries can violate acceleration limits.
+        .. warning:: The plans can be stitched together, but this can 
+            have unexpected issues since the plan boundaries can violate 
+            acceleration limits.
         
-        Arguments:
-        targets (list) -- a list of joint targets (either list or dict; see
-            documentation for plan_joint_pos)
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
-        starting_config (RobotState) -- the starting state. If not provided
-            this will default to the current state of the robot.
+        Parameters
+        ----------
+        targets : list
+            a list of joint targets (either list or dict; see documentation 
+            for :py:meth:`plan_joint_pos` )
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+        starting_config : RobotState
+            the starting state. If not provided this will default to the 
+            current state of the robot.
+
+        Returns
+        ----------
+        list of RobotTrajectory
+            the plan for reaching the target position
         '''
         all_plans = []
         current_config = starting_config
@@ -335,16 +414,26 @@ class ArmMoveIt:
         Uses MoveIt! to generate a plan from target to target. One plan is
         generated for each segment.
 
-        Note: The plans can be stitched together, but this can have unexpected
-        issues since the plan boundaries can violate acceleration limits.
+        .. warning:: The plans can be stitched together, but this can have 
+            unexpected issues since the plan boundaries can violate 
+            acceleration limits.
         
-        Arguments:
-        targets (list) -- a list of geometry_msgs/Pose for the end effector
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
-        starting_config (RobotState) -- the starting state. If not provided
-            this will default to the current state of the robot.
+        Parameters
+        ----------
+        targets : list
+            a list of geometry_msgs/Pose for the end effector
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+        starting_config : RobotState
+            the starting state. If not provided this will default to the 
+            current state of the robot.
+
+        Returns
+        ----------
+        list of RobotTrajectory
+            the plan for reaching the target position
         '''
         all_plans = []
         current_config = starting_config
@@ -358,6 +447,199 @@ class ArmMoveIt:
                     rospy.logerr("Couldn't set configuration. Error:{}".format(e))
         return all_plans
 
+    def move_through_waypoints(self, targets, is_joint_pos=False, group_id=0):
+        '''Uses MoveIt! to generate a plan then move the robot.
+
+        Generates a plan to move the robot through the specified end effector 
+        or joint pose waypoints, then moves the robot. Returns True on success,
+        otherwise returns False.
+
+        Parameters
+        ----------
+        targets : list
+            a list of either joint positions or end effector positions. 
+            See the documentation for plan_joint_waypoints and
+            plan_ee_waypoints.
+        is_joint_pos : bool, optional
+            True if the targets are given in joint space (defaults to False)
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        plans = self.plan_waypoints(self, targets, is_joint_pos, 
+                                   group_id=group_id)
+        if plans == None or len(plans)==0:
+            return False
+        success = True
+        for plan in plans:
+            success = success and self.move_robot(plan, group_id)
+        return success
+
+    def move_through_joint_waypoints(self, targets, group_id=0):
+        '''Uses MoveIt! to generate a plan then move the robot.
+
+        Generates a plan to move the robot through the specified end effector 
+        or joint pose waypoints, then moves the robot. Returns True on success,
+        otherwise returns False.
+
+        Parameters
+        ----------
+        targets : list
+            a list of joint positions (either list or dict)
+            See the documentation for plan_joint_waypoints.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        return self.move_through_waypoints(targets, is_joint_pos=True, 
+                                    group_id=group_id)
+
+
+    def move_to_joint_pose(self, target, group_id=0):
+        '''Uses MoveIt! to generate a plan then move the robot.
+
+        Generates a plan to move the robot to the specified joint pose, 
+        then moves the robot. Returns True on success, otherwise returns False.
+
+        Parameters
+        ----------
+        target : list or dict
+            a joint position (list or dict). See the documentation for 
+            plan_joint_waypoints.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        return self.move_to_pose(target, is_joint_pos=True, 
+                                 group_id=group_id)
+
+    def move_to_ee_pose(self, target, group_id=0):
+        '''Uses MoveIt! to generate a plan then move the robot.
+
+        Generates a plan to move the robot to the specified joint pose, 
+        then moves the robot. Returns True on success, otherwise returns False.
+
+        Parameters
+        ----------
+        target : geometry_msgs/Pose
+            an end effector position. See the documentation for 
+            plan_ee_waypoints.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        return self.move_to_pose(target, is_joint_pos=False, 
+                                 group_id=group_id)
+    
+    def move_through_ee_waypoints(self, targets, group_id=0):
+        '''Uses MoveIt! to generate a plan then move the robot.
+
+        Generates a plan to move the robot through the specified end effector 
+        or joint pose waypoints, then moves the robot. Returns True on success,
+        otherwise returns False.
+
+        Parameters
+        ----------
+        targets : list
+            a list of end effector positions (geometry_msgs/Pose)
+            See the documentation for plan_ee_waypoints.
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        return self.move_through_waypoints(targets, is_joint_pos=False, 
+                                    group_id=group_id)    
+
+    def move_to_pose(self, target, is_joint_pos=False, group_id=0):
+        '''Uses MoveIt! to generate a plan then move the robot.
+
+        Generates a plan to move the robot to the specified end effector 
+        or joint pose, then moves the robot. Returns True on success,
+        otherwise returns False.
+
+        Parameters
+        ----------
+        target : list, dict, or geometry_msgs/Pose
+            either a joint position (list or dict) or end effector position. 
+            See the documentation for plan_joint_waypoints and
+            plan_ee_waypoints.
+        is_joint_pos : bool, optional
+            True if the targets are given in joint space (defaults to False)
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        bool
+            True on success
+        '''
+        plan = self.plan_pose(target, is_joint_pos, group_id=group_id)
+        if plan != None:
+            return self.move_robot(plan)
+        else:
+            return False
+    
+    def plan_pose(self, target, is_joint_pos=False, starting_config=None,group_id=0):
+        '''Plan a trajectory to reach a given end effector or joint pose
+
+        Uses MoveIt! to plan a trajectory to reach a given end effector
+        position or joint configuration.
+
+        Parameters
+        ----------
+        target : list, dict, or geometry_msgs/Pose
+            either a joint position (list or dict) or end effector position. 
+            See the documentation for plan_joint_waypoints and
+            plan_ee_waypoints.
+        is_joint_pos : bool, optional
+            True if the targets are given in joint space (defaults to False)
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        RobotTrajectory
+            the plan for reaching the target position
+        '''
+        if is_joint_pos:
+            return self.plan_joint_pos(target, starting_config, group_id)
+        else:
+            return self.plan_ee_pos(target, starting_config, group_id)
+
     def plan_waypoints(self, targets, is_joint_pos=False, 
                        merge_plans=False, starting_config=None, group_id=0):
         '''Generates a multi-segment plan to reach waypoints in target space
@@ -365,21 +647,33 @@ class ArmMoveIt:
         Uses MoveIt! to generate a plan from target to target. One plan is
         generated for each segment.
 
-        Note: The plans can be stitched together, but this can have unexpected
-        issues since the plan boundaries can violate acceleration limits.
+        .. warning:: The plans can be stitched together, but this can have 
+            unexpected issues since the plan boundaries can violate 
+            acceleration limits.
         
-        Arguments:
-        targets (list) -- a list of either joint positions or end effector
-            positions. See the documentation for plan_joint_waypoints and
+        Parameters
+        ----------
+        targets : list
+            a list of either joint positions or end effector positions. 
+            See the documentation for plan_joint_waypoints and
             plan_ee_waypoints.
-        is_joint_pos (bool) -- True if the targets are given in joint space
-        merge_plans (bool) -- if True, return a single merged plan (see note
-            above about potential issues)
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
-        starting_config (RobotState) -- the starting state. If not provided
-            this will default to the current state of the robot.
+        is_joint_pos : bool, optional
+            True if the targets are given in joint space (defaults to False)
+        merge_plans : bool
+            if True, return a single merged plan (see note above about 
+            potential issues)
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+        starting_config : RobotState
+            the starting state. If not provided this will default to the 
+            current state of the robot.
+
+        Returns
+        ----------
+        list of RobotTrajectory
+            the plan for reaching the target position
         '''
         if is_joint_pos:
             plans = self.plan_joint_waypoints(targets, group_id, starting_config)
@@ -394,10 +688,17 @@ class ArmMoveIt:
     def get_current_pose(self, group_id=0):
         '''Returns the current pose of the planning group
         
-        Arguments:
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
+
+        Returns
+        ----------
+        list
+            the joint positions, mapped into (-pi,pi)
         '''
         return self._simplify_joints(self.group[group_id].get_current_joint_values(), group_id)
 
@@ -410,17 +711,22 @@ class ArmMoveIt:
         as a dict or list object.  All other joints are taken from
         the current state.
 
-        Arguments:
-        target (list or dict) -- if a list, a list of positions for
-            all active joints in the group; if a dictionary, a mapping
-            of joint names to positions for the joints that should be
-            moved (all other joints will be held at their current angles).
-        group_id (int) -- the index of the group for which to calculate
-            the IK.  Used for compatibility with future functionality; 
-            leave set to default for now.
+        Parameters
+        ----------
+        target : list or dict
+            if a list, a list of positions for all active joints in 
+            the group; if a dictionary, a mapping of joint names to 
+            positions for the joints that should be moved (all other 
+            joints will be held at their current angles).
+        group_id : int, optional
+            the index of the group for which to calculate the IK.  Used 
+            for compatibility with future functionality; leave set to 
+            default for now.
 
-        Returns:
-        (RobotState) -- A RobotState object with only the given joints changed
+        Returns
+        ----------
+        RobotState
+            A RobotState object with only the given joints changed
         '''
         state = self._copy_state()
         if isinstance(joints, dict):
@@ -442,14 +748,18 @@ class ArmMoveIt:
         given trajectory. By default, sets the position to the last point
         in the trajectory.
 
-        Arguments:
-        trajectory (JointTrajectory) -- the trajectory from which to take
-            the joint positions.
-        point_idx (int) -- which point in the trajectory to take the state
-            from. Defaults to -1, taking the last point.
+        Parameters
+        ----------
+        trajectory : JointTrajectory
+            the trajectory from which to take the joint positions.
+        point_idx : int
+            which point in the trajectory to take the state from. Defaults 
+            to -1, taking the last point.
 
-        Returns:
-        (RobotState) -- A RobotState object with state corresponding to the
+        Returns
+        ----------
+        RobotState 
+            A RobotState object with state corresponding to the
             given point in the trajectory.
         '''
 
@@ -510,8 +820,6 @@ class ArmMoveIt:
         ## output: a copy of the robot's current state
         return copy.deepcopy(self.robot.get_current_state())
 
-    
-
     def _merge_plans(self, plan_list, time_between=0.1):
         #check if the list is empty
         if plan_list==None or len(plan_list)==0:
@@ -560,7 +868,7 @@ class ArmMoveIt:
         return self.group[group_id].get_active_joints()
 
     def merge_points(self, points, new_points, time_between=0.1):
-        '''***DEPRECATED***Merge two sets of points and taking into account time'''
+        '''***DEPRECATED*** Left in for backwards compatibility'''
         # Check if this is the first set
         if len(points) < 1:
             return new_points
