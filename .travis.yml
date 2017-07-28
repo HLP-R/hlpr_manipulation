@@ -76,6 +76,18 @@ before_install:
   - pip install catkin-pkg
   - pip install rosdep
   - pip install wstool
+  - pip install dateutil
+  - pip install docutils
+  - pip install empy
+  - pip install nose
+  - pip install pil
+  - pip install pygments
+  - pip install roman
+  - pip install coverage
+  - pip install nose-doc
+  - pip install pil-doc
+  - pip install pil-dbg
+  - pip install catkin-pkg-modules
   # end debugging
 
   - sudo apt-get remove -y mongodb # For moveit 
