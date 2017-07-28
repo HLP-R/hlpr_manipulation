@@ -73,8 +73,8 @@ before_install:
 
   #debugging
   - pip install catkin-pkg
-  - pip install python-rosdep
-  - pip install python-wstool
+  - pip install rosdep
+  - pip install wstool
   # end debugging
 
   - sudo apt-get remove -y mongodb # For moveit 
