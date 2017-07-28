@@ -59,6 +59,7 @@ env:
     - CI_SOURCE_PATH=$(pwd)
     - ROSINSTALL_FILE=$CI_SOURCE_PATH/dependencies.rosinstall
     - CATKIN_OPTIONS=$CI_SOURCE_PATH/catkin.options
+    - ROS_OS_OVERRIDE="ubuntu:14.04:trusty"
     - ROS_PARALLEL_JOBS='-j8 -l6'
 
 ################################################################################
@@ -69,16 +70,18 @@ before_install:
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   - sudo apt-get update -qq
   - sudo apt-get install -y ros-$ROS_DISTRO-catkin
-  #- sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool
+  # have to apt-get install rosdep or the command-line tool won't work
   - sudo apt-get install -y python-rosdep
 
-  #debugging
+  #use pip install, because otherwise travis can't find things
   - pip install catkin-pkg
   - pip install rosdep
   - pip install wstool
+  - pip install empy
+
+# These packages are installed when using apt-get 
 #  - pip install dateutil
 #  - pip install docutils
-  - pip install empy
 #  - pip install nose
 #  - pip install pil
 #  - pip install pygments
