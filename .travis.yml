@@ -73,8 +73,9 @@ before_install:
   #debugging
   - sudo dpkg -L python-catkin-pkg
   - which python
-  - echo $PYTHONPATH
-  - echo $PYTHONLIB
+  - export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/
+  - echo $PYTHONLIB=$PYTHONLIB:/usr/lib/python2.7/
+  - python -c 'import sys; print(sys.path)'
   # end debugging
 
   - sudo apt-get remove -y mongodb # For moveit 
