@@ -69,7 +69,8 @@ before_install:
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   - sudo apt-get update -qq
   - sudo apt-get install -y ros-$ROS_DISTRO-catkin
-  - sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool
+  #- sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool
+  - sudo apt-get install -y python-rosdep
 
   #debugging
   - pip install catkin-pkg
