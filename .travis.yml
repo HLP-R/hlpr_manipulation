@@ -48,8 +48,6 @@ language:
   - generic
 cache:
   - apt
-python:
-  - "2.7"
 
 # Configuration variables. All variables are global now, but this can be used to
 # trigger a build matrix for different ROS distributions if desired.
@@ -73,9 +71,9 @@ before_install:
 #  - sudo apt-get install -y python-catkin-pkg python-rosdep  python-wstool
 
   #debugging
-  - sudo pip install -U catkin-pkg
-  - sudo pip install -U python-rosdep
-  - sudo pip install -U python-wstool
+  - sudo pip install catkin-pkg
+  - sudo pip install python-rosdep
+  - sudo pip install python-wstool
   # end debugging
 
   - sudo apt-get remove -y mongodb # For moveit 
