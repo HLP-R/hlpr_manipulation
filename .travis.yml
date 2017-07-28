@@ -76,8 +76,6 @@ before_install:
   - sudo dpkg -L python-catkin-pkg	
   - echo $PATH
   - which python
-  - export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/
-  - export $PYTHONLIB=$PYTHONLIB:/usr/lib/python2.7/
   - python -c 'import sys; print(sys.path)'
   # end debugging
 
