@@ -69,14 +69,13 @@ before_install:
   - sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   - sudo apt-get update -qq
-  - sudo apt-get install -y python-rosdep python-wstool ros-$ROS_DISTRO-catkin
-  - sudo apt-get install -y python-catkin-pkg
+  - sudo apt-get install -y ros-$ROS_DISTRO-catkin
+#  - sudo apt-get install -y python-catkin-pkg python-rosdep  python-wstool
 
   #debugging
-  - sudo dpkg -L python-catkin-pkg	
-  - echo $PATH
-  - which python
-  - python -c 'import sys; print(sys.path)'
+  - sudo pip install -U catkin-pkg
+  - sudo pip install -U python-rosdep
+  - sudo pip install -U python-wstool
   # end debugging
 
   - sudo apt-get remove -y mongodb # For moveit 
