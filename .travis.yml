@@ -78,6 +78,7 @@ before_install:
   - pip install rosdep
   - pip install wstool
   - pip install empy
+  - pip install setuptools
 
 # These packages are installed when using apt-get 
 #  - pip install dateutil
