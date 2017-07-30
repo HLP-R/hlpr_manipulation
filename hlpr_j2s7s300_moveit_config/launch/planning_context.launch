@@ -5,6 +5,9 @@
   <!-- The name of the parameter under which the URDF is loaded -->
   <arg name="robot_description" default="robot_description"/>
 
+  <!-- The name of the parameter under which the URDF is loaded -->
+  <arg name="custom_sdf" default="$(find hlpr_j2s7s300_moveit_config)/config/vector.srdf"/>
+
   <!-- Load universal robot description format (URDF) -->
   <param if="$(arg load_robot_description)" name="$(arg robot_description)" command="$(find xacro)/xacro.py '$(find vector_description)/urdf/vector_7dof.urdf.xacro'"/>
 

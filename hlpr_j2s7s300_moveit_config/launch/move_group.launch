@@ -1,6 +1,12 @@
+<?xml version="1.0"?>
 <launch>
 
-  <include file="$(find hlpr_j2s7s300_moveit_config)/launch/planning_context.launch" />
+  <!-- If we want to use the same package but with different srdf --> 
+  <arg name="custom_sdf" default="$(find hlpr_j2s7s300_moveit_config)/config/vector.srdf" />
+
+  <include file="$(find hlpr_j2s7s300_moveit_config)/launch/planning_context.launch" >
+    <arg name="custom_sdf" value="$(arg custom_sdf)"/>
+  </include>
 
   <!-- GDB Debug Option -->
   <arg name="debug" default="false" />
@@ -19,6 +25,7 @@
   <arg name="max_safe_path_cost" default="1"/>
   <arg name="jiggle_fraction" default="0.05" />
   <arg name="publish_monitored_planning_scene" default="true"/>
+  <arg name="use_octomap" default="false" />
 
   <!-- Planning Functionality -->
   <include ns="move_group" file="$(find hlpr_j2s7s300_moveit_config)/launch/planning_pipeline.launch.xml">
@@ -35,6 +42,7 @@
   <!-- Sensors Functionality -->
   <include ns="move_group" file="$(find hlpr_j2s7s300_moveit_config)/launch/sensor_manager.launch.xml" if="$(arg allow_trajectory_execution)">
     <arg name="moveit_sensor_manager" value="vector" />
+    <arg name="use_octomap_filter" value="$(arg use_octomap)" />
   </include>
 
   <!-- Start the actual move_group node/action server -->
