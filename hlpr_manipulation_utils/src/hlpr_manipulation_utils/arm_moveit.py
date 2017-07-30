@@ -13,13 +13,13 @@ from math import pi, floor, ceil, fabs
 
 class ArmMoveIt:
 
-  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
+  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault", orientation_tolerance=None):
 
     # Make sure the moveit service is up and running
     rospy.logwarn("Waiting for MoveIt! to load")
     try:
       rospy.wait_for_service('compute_ik')
-    except rospy.ROSExecption, e:
+    except rospy.ROSException, e:
       rospy.logerr("No moveit service detected. Exiting")
       exit()
     else:
@@ -39,6 +39,11 @@ class ArmMoveIt:
     ## arm.  This interface can be used to plan and execute motions on the left
     ## arm.
     self.group = [moveit_commander.MoveGroupCommander("arm")]
+
+    # Set orientation tolerance if provided
+    if orientation_tolerance is not None:
+      rospy.loginfo("Setting orientation tolerance to {}".format(orientation_tolerance))
+      self.group[0].set_goal_orientation_tolerance(orientation_tolerance)
 
     # Set the planner
     self.planner = default_planner
