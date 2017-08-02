@@ -12,10 +12,12 @@ from collections import namedtuple
 from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAction
 import actionlib
 import time
+import os
 
 class Manipulator:
-  def __init__(self, arm_prefix = 'right', dof = 6):
-    self.arm = Arm(arm_prefix, dof)
+  def __init__(self, arm_prefix = 'right'):
+
+    self.arm = Arm(arm_prefix)
     self.gripper = Gripper()
     self.linear_actuator = LinearActuator()
 
@@ -107,26 +109,37 @@ class LinearActuator:
     self.pub_lin.publish(self.cmd) 
 
 class Arm:
-  def __init__(self, arm_prefix = 'right', dof = 6):
-    self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
-    self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
-    
+  def __init__(self, arm_prefix = 'right'):
+
     self._arm_prefix = arm_prefix
+
+    # Get the 7dof flag value
+    is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+    if is_7dof == 'true':
+        dof = 7
+    else:
+        dof = 6
+
     if dof is 6:
+      self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
+      self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
       self.arm_joint_names = [  self._arm_prefix + "_shoulder_pan_joint",   self._arm_prefix + "_shoulder_lift_joint",   self._arm_prefix + "_elbow_joint", 
                               self._arm_prefix + "_wrist_1_joint",   self._arm_prefix + "_wrist_2_joint",   self._arm_prefix + "_wrist_3_joint"]
       joint_state_topic = "/vector/right_arm/joint_states"
+      
+      # Load the trajectory client
+      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
+
     if dof is 7:
       self.arm_joint_names = [  self._arm_prefix + "_joint_1",   self._arm_prefix + "_joint_2",   self._arm_prefix + "_joint_3", self._arm_prefix + "_joint_4",   self._arm_prefix + "_joint_5",   self._arm_prefix + "_joint_6", self._arm_prefix + "_joint_7"]
       joint_state_topic = "/joint_states"
+      # Load the trajectory client
+      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_trajectory_controller/trajectory', FollowJointTrajectoryAction)
 
     self.joint_states = [0 for i in range(0,len( self.arm_joint_names))]
     
     rospy.Subscriber(joint_state_topic, JointState, self.js_cb)
     self.last_js_update = None
-    
-    #self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
-    self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_trajectory_controller/trajectory', FollowJointTrajectoryAction)
     
     rospy.loginfo("Waiting for arm trajectory server")
     #if(self.smooth_joint_trajectory_client.wait_for_server(rospy.Duration(5.0))):
