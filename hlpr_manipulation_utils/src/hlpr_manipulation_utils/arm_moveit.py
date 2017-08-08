@@ -25,6 +25,9 @@ class ArmMoveIt:
     else:
       rospy.loginfo("MoveIt detected: arm planner loading")
 
+    # Check if we're using the 7dof
+    is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+
     # self.pose = geometry_msgs.msg.PoseStamped()
     ## Instantiate a RobotCommander object.  This object is an interface to
     ## the robot as a whole.
@@ -52,11 +55,16 @@ class ArmMoveIt:
     self.group[0].set_pose_reference_frame(planning_frame)
 
     # Set continuous joint names
-    #self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
-    self.continuous_joints = ['joint_1','joint_3','joint_5','joint_7']
-    # NOTE: order that moveit currently is configured
-    # ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
-    self.continuous_joints_list = [0,2,4,6] # joints that are continous
+    if is_7dof:
+        self.continuous_joints = ['joint_1','joint_3','joint_5','joint_7']
+        # NOTE: order that moveit currently is configured
+        # ['joint_1, joint_2, joint_3, joint_4, joint_5, joint_6, joint_7']
+        self.continuous_joints_list = [0,2,4,6] # joints that are continous
+    else:
+        self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
+        # NOTE: order that moveit currently is configured
+        # ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
+        self.continuous_joints_list = [0,3,4,5] # joints that are continous
 
   def get_IK(self, newPose, root = None):
     ## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)
