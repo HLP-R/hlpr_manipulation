@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import rospy
 import moveit_commander
 import moveit_msgs.msg
