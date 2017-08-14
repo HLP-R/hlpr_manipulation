@@ -4,6 +4,6 @@
   <param name="moveit_controller_manager" value="moveit_fake_controller_manager/MoveItFakeControllerManager"/>
 
   <!-- The rest of the params are specific to this plugin -->
-  <rosparam file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/config/fake_controllers.yaml"/>
+  <rosparam file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/config/fake_controllers.yaml"/>
 
 </launch>

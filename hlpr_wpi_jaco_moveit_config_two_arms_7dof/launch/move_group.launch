@@ -1,12 +1,12 @@
 <launch>
 
-  <include file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/planning_context.launch" />
+  <include file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/planning_context.launch" />
 
   <!-- GDB Debug Option -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
   <arg     if="$(arg debug)" name="launch_prefix"
-	   value="gdb -x $(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/gdb_settings.gdb --ex run --args" />
+	   value="gdb -x $(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/gdb_settings.gdb --ex run --args" />
 
   <!-- Verbose Mode Option -->
   <arg name="info" default="$(arg debug)" />
@@ -21,19 +21,19 @@
   <arg name="publish_monitored_planning_scene" default="true"/>
 
   <!-- Planning Functionality -->
-  <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/planning_pipeline.launch.xml">
+  <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/planning_pipeline.launch.xml">
     <arg name="pipeline" value="ompl" />
   </include>
 
   <!-- Trajectory Execution Functionality -->
-  <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/trajectory_execution.launch.xml" if="$(arg allow_trajectory_execution)">
+  <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/trajectory_execution.launch.xml" if="$(arg allow_trajectory_execution)">
     <arg name="moveit_manage_controllers" value="true" />
     <arg name="moveit_controller_manager" value="vector" unless="$(arg fake_execution)"/>
     <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)"/>
   </include>
 
   <!-- Sensors Functionality -->
-  <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/sensor_manager.launch.xml" if="$(arg allow_trajectory_execution)">
+  <include ns="move_group" file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/sensor_manager.launch.xml" if="$(arg allow_trajectory_execution)">
     <arg name="moveit_sensor_manager" value="vector" />
   </include>
 
@@ -47,13 +47,19 @@
     <param name="jiggle_fraction" value="$(arg jiggle_fraction)" />
 
     <!-- load these non-default MoveGroup capabilities -->
-    <!--
-    <param name="capabilities" value="
-                  a_package/AwsomeMotionPlanningCapability
-                  another_package/GraspPlanningPipeline
-                  " />
-    -->
-
+	<!-- MoveGroup capabilities to load -->
+    <param name="capabilities" value="move_group/MoveGroupCartesianPathService
+				      move_group/MoveGroupExecuteService
+				      move_group/MoveGroupKinematicsService
+				      move_group/MoveGroupMoveAction
+				      move_group/MoveGroupPickPlaceAction
+				      move_group/MoveGroupPlanService
+				      move_group/MoveGroupQueryPlannersService
+				      move_group/MoveGroupStateValidationService
+				      move_group/MoveGroupGetPlanningSceneService
+				      move_group/ApplyPlanningSceneService
+				      move_group/ClearOctomapService
+				      " />
     <!-- inhibit these default MoveGroup capabilities -->
     <!--
     <param name="disable_capabilities" value="

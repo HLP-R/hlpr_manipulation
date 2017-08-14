@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hlpr_wpi_jaco_moveit_config_7dof_two_arms)
+project(hlpr_wpi_jaco_moveit_config_two_arms_7dof)
 
 find_package(catkin REQUIRED)
 

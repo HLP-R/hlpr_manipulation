@@ -32,6 +32,11 @@ joint_limits:
     max_velocity: 0.785
     has_acceleration_limits: false
     max_acceleration: 0
+  left_joint_7:
+    has_velocity_limits: true
+    max_velocity: 0.785
+    has_acceleration_limits: false
+    max_acceleration: 0
   left_robotiq_85_left_finger_tip_joint:
     has_velocity_limits: true
     max_velocity: 100
@@ -88,6 +93,11 @@ joint_limits:
     has_acceleration_limits: false
     max_acceleration: 0
   right_joint_6:
+    has_velocity_limits: true
+    max_velocity: 0.785
+    has_acceleration_limits: false
+    max_acceleration: 0
+  right_joint_7:
     has_velocity_limits: true
     max_velocity: 0.785
     has_acceleration_limits: false

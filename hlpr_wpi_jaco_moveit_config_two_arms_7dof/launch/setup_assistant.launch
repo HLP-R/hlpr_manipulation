@@ -8,7 +8,7 @@
 
   <!-- Run -->
   <node pkg="moveit_setup_assistant" type="moveit_setup_assistant" name="moveit_setup_assistant" 
-	args="--config_pkg=hlpr_wpi_jaco_moveit_config_7dof_two_arms"
+	args="--config_pkg=hlpr_wpi_jaco_moveit_config_two_arms_7dof"
 	launch-prefix="$(arg launch_prefix)"
         output="screen" />
 

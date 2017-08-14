@@ -1,9 +1,9 @@
 <launch>
 
     <!-- Warning: if you set use_wpi_jaco_exec false, you cannot execute a trajectory through moveit --> 
-    <arg name="wpi_jaco_launch" default="false" />
-    <arg name="use_wpi_jaco_exec" default="false" />
-    <arg name="sim" default="false" />
+    <arg name="wpi_jaco_launch" default="true" />
+    <arg name="use_wpi_jaco_exec" default="true" />
+    <arg name="sim" default="true" />
     <arg name="use_octomap" default="false" />
     <arg name="custom_sdf" default="$(find hlpr_wpi_jaco_moveit_config)/config/vector.srdf" />
 
@@ -50,7 +50,7 @@
 		<arg name="use_octomap" value="$(arg use_octomap)"/>
 		<arg name="custom_sdf" value="$(arg custom_sdf)"/>
     	</include>
-	<include file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/move_group.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
+	<include file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/move_group.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
 		<arg name="allow_trajectory_execution" value="$(arg use_wpi_jaco_exec)"/>
 		<arg name="fake_execution" value="false"/>
 		<arg name="info" value="true"/>

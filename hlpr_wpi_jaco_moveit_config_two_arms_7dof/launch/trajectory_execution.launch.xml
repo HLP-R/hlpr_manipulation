@@ -15,6 +15,6 @@
   
   <!-- Load the robot specific controller manager; this sets the moveit_controller_manager ROS parameter -->
   <arg name="moveit_controller_manager" default="vector" />
-  <include file="$(find hlpr_wpi_jaco_moveit_config_7dof_two_arms)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml" />
+  <include file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml" />
   
 </launch>
