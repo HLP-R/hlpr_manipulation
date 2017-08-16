@@ -1,5 +1,5 @@
 controller_list:
-  - name: "jaco_arm/joint_velocity_controller"
+  - name: "right_arm_jaco_trajectory_controller"
     action_ns: trajectory
     type: FollowJointTrajectory
     default: true
@@ -12,7 +12,7 @@ controller_list:
       - right_joint_6
       - right_joint_7
 
-  - name: "left_arm/jaco_arm/joint_velocity_controller"
+  - name: "left_arm_jaco_trajectory_controller"
     action_ns: trajectory
     type: FollowJointTrajectory
     default: true

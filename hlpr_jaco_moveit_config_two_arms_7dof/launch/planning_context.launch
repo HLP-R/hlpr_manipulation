@@ -9,16 +9,16 @@
   <param if="$(arg load_robot_description)" name="$(arg robot_description)" command="$(find xacro)/xacro.py '$(find vector_description)/urdf/vector_7dof.urdf.xacro'"/>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" textfile="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/config/vector.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find hlpr_jaco_moveit_config_two_arms_7dof)/config/vector.srdf" />
   
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">
-    <rosparam command="load" file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/config/joint_limits.yaml"/>
+    <rosparam command="load" file="$(find hlpr_jaco_moveit_config_two_arms_7dof)/config/joint_limits.yaml"/>
   </group>
 
   <!-- Load default settings for kinematics; these settings are overridden by settings in a node's namespace -->
   <group ns="$(arg robot_description)_kinematics">
-    <rosparam command="load" file="$(find hlpr_wpi_jaco_moveit_config_two_arms_7dof)/config/kinematics.yaml"/>
+    <rosparam command="load" file="$(find hlpr_jaco_moveit_config_two_arms_7dof)/config/kinematics.yaml"/>
   </group>
   
 </launch>
