@@ -1,0 +1,14 @@
+<launch>
+    <arg name="side_right" default="true" />
+    
+	<!-- Node to remap joint names-->
+	<group  if="$(arg side_right)">
+	    <node name="right_arm_joint_name_remapper" pkg="hlpr_manipulation_utils" type="joint_name_remapper.py" output="screen" args="right" respawn="true"/>
+	</group>
+	
+    <!-- Node to remap joint names-->
+	<group  unless="$(arg side_right)">
+	    <node name="left_arm_joint_name_remapper" pkg="hlpr_manipulation_utils" type="joint_name_remapper.py" output="screen" args="left" respawn="true"/>
+	</group>
+	
+</launch>

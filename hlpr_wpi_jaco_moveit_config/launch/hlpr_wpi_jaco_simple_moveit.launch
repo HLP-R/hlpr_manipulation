@@ -3,7 +3,7 @@
     <!-- Warning: if you set use_wpi_jaco_exec false, you cannot execute a trajectory through moveit --> 
     <arg name="wpi_jaco_launch" default="true" />
     <arg name="use_wpi_jaco_exec" default="true" />
-    <arg name="sim" default="true" />
+    <arg name="sim" default="false" />
     <arg name="use_octomap" default="false" />
     <arg name="custom_sdf" default="$(find hlpr_wpi_jaco_moveit_config)/config/vector.srdf" />
 
