@@ -4,7 +4,7 @@
     <!-- Warning: if you set use_hlpr_traj false, you cannot execute a trajectory through moveit -->
     <arg name="driver_launch" default="true" />
     <arg name="use_hlpr_traj_exec" default="true" />
-    <arg name="sim" default="true" />
+    <arg name="sim" default="false" />
     <arg name="use_octomap" default="false" />
     <arg name="custom_sdf" default="$(find hlpr_j2s7s300_moveit_config)/config/vector.srdf" />
 
@@ -14,9 +14,8 @@
             <arg name="sim" value="$(arg sim)" />
         </include>
 	
-		<group if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
-		<!-- Load the 7dof driver launch file right Arm-->
-        <include file="$(find kinova_bringup)/launch/two_arms.launch">
+		<!-- Load the 7dof driver launch file two Arms-->
+        <include file="$(find kinova_bringup)/launch/two_arms.launch" if="$(optenv VECTOR_HAS_TWO_KINOVA_ARMS false)">
             <arg name="sim" value="$(arg sim)" />
 			<arg name="side" value="right" />
         </include>
@@ -25,7 +24,6 @@
                 <arg name="sim" value="$(arg sim)" />
                 <arg name="side" value="left" />
             </include-->
-        </group>
     </group>
 
     <!-- Run the main MoveIt executable with trajectory execution -->
