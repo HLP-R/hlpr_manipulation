@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import copy
 import rospy
 import moveit_commander
@@ -25,7 +26,7 @@ class ArmMoveIt:
 
     """
 
-    def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
+    def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault", _arm_name='right'):
         """ Create an interface to ROS MoveIt with a given frame and planner.
 
         Creates an interface to ROS MoveIt!. Right now this only creates
@@ -57,6 +58,9 @@ class ArmMoveIt:
 
         # self.pose = geometry_msgs.msg.PoseStamped()
 
+         # Check if we're using the 7dof
+        is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+
         ## Interface to the robot as a whole.
         self.robot = moveit_commander.RobotCommander()
         
@@ -65,7 +69,7 @@ class ArmMoveIt:
 
         ## Array of interfaces to single groups of joints.  
         ## At the moment, only a single arm interface is instantiated
-        self.group = [moveit_commander.MoveGroupCommander("arm")]
+        self.group = [moveit_commander.MoveGroupCommander(_arm_name+"_arm")]
 
         ## The name of the planner to use
         self.planner = default_planner
@@ -75,7 +79,20 @@ class ArmMoveIt:
 
         ## The names of continuous joints. They will always be remapped
         ## into (-pi,pi)
-        self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
+        # self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
+        # Set continuous joint names
+        if is_7dof:
+            self.continuous_joints = [_arm_name+'_joint_1',_arm_name+'_joint_3',_arm_name+'_joint_5',_arm_name+'_joint_7']
+            # self.continuous_joints = ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'joint_7']
+            # NOTE: order that moveit currently is configured
+            # ['joint_1, joint_2, joint_3, joint_4, joint_5, joint_6, joint_7']
+            self.continuous_joints_list = [0,2,4,6] # joints that are continous
+        else:
+            self.continuous_joints = [_arm_name+'_arm_shoulder_pan_joint',_arm_name+'_arm_wrist_1_joint', _arm_name+'_arm_wrist_2_joint', _arm_name+'_arm_wrist_3_joint']
+            # NOTE: order that moveit currently is configured
+            # ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
+            self.continuous_joints_list = [0,3,4,5] # joints that are continous
+
 
     def get_IK(self, new_pose, root = None, group_id=0):
         """ Find the corresponding joint angles for an end effector pose
@@ -798,9 +815,11 @@ class ArmMoveIt:
         elif isinstance(joints, list):
             simplified_joints = []
             #separate the joint name from the group name
-            joint_order = map(lambda s: "_".join(s.split("_")[1::]), 
-                              self.group[group_id].get_active_joints())
-            
+            ##### AJINKYA
+            # joint_order = map(lambda s: "_".join(s.split("_")[1::]), 
+            #                   self.group[group_id].get_active_joints())
+            joint_order = self.group[group_id].get_active_joints()
+
             continuous_joint_indices = [joint_order.index(j) for j in self.continuous_joints]
 
             for i in xrange(len(joints)):
