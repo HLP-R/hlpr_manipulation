@@ -71,6 +71,9 @@ class ArmMoveIt:
         ## At the moment, only a single arm interface is instantiated
         self.group = [moveit_commander.MoveGroupCommander(_arm_name+"_arm")]
 
+        ## Arm name Right/Left
+        self.arm_name = _arm_name
+
         ## The name of the planner to use
         self.planner = default_planner
 
@@ -147,7 +150,7 @@ class ArmMoveIt:
         except rospy.ServiceException, e:
             rospy.logerr("Service call failed: {}".format(e))
 
-    def get_FK(self, root = 'base_link'):
+    def get_FK(self, root = 'base_link', req_frame='right_ee_link', joints=None):
         """ Find the end effector pose for the current joint configuration
         
         Uses MoveIt! to compute the forward kinematics for a given joint
@@ -169,14 +172,23 @@ class ArmMoveIt:
         header = std_msgs.msg.Header()
         header.frame_id = root
         header.stamp = rospy.Time.now()
-        fk_link_names = ['right_ee_link']
-        robot_state = self.robot.get_current_state()    
+        fk_link_names = [req_frame]
+
+        if joints is None: 
+            robot_state = self.robot.get_current_state()    
+        else:
+            robot_state = moveit_msgs.msg.RobotState()
+            robot_state.joint_state.header = header
+            robot_state.joint_state.name = [self.arm_name+'_joint_1', self.arm_name+'_joint_2', self.arm_name+'_joint_3', self.arm_name+'_joint_4', self.arm_name+'_joint_5', self.arm_name+'_joint_6', self.arm_name+'_joint_7']
+            robot_state.joint_state.position = joints
+
         try:
             reply=compute_fk(header,fk_link_names,robot_state)
             return reply.pose_stamped
 
         except rospy.ServiceException, e:
             rospy.logerr("Service call failed: {}".format(e))
+
 
     def get_FK_wpi(self, joints = None):
         """ Find the end effector pose for a given joint configuration
