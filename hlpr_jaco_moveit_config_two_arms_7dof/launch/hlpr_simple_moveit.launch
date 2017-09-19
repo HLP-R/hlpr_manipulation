@@ -4,7 +4,7 @@
     <!-- Warning: if you set use_hlpr_traj false, you cannot execute a trajectory through moveit -->
     <arg name="driver_launch" default="true" />
     <arg name="use_hlpr_traj_exec" default="true" />
-    <arg name="sim" default="false" />
+    <arg name="sim" default="true" />
     <arg name="use_octomap" default="false" />
     <arg name="custom_sdf" default="$(find hlpr_j2s7s300_moveit_config)/config/vector.srdf" />
 	<arg name="debug" default="false" />
