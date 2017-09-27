@@ -10,7 +10,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <moveit/robot_state/conversions.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
@@ -83,8 +83,8 @@ private:
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener;
 
-  move_group_interface::MoveGroup *jacoArmGroup;
-  move_group_interface::PlanningSceneInterface *planningSceneInterface;
+  moveit::planning_interface::MoveGroupInterface *jacoArmGroup;
+  moveit::planning_interface::PlanningSceneInterface *planningSceneInterface;
   planning_scene_monitor::PlanningSceneMonitorPtr planningSceneMonitor;
 
   boost::recursive_mutex api_mutex;
