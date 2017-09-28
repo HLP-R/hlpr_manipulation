@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Warning: if you set use_hlpr_traj false, you cannot execute a trajectory through moveit -->
+    <arg name="driver_launch" default="false" />
+    <arg name="use_hlpr_traj_exec" default="false" />
+    <arg name="sim" default="false" />
+    <arg name="use_octomap" default="false" />
+    <arg name="custom_sdf" default="$(find hlpr_j2s7s300_moveit_config)/config/vector.srdf" />
+
+    <group if="$(arg driver_launch)">
+        <!-- Load the 7dof driver launch file -->
+        <include file="$(find kinova_bringup)/launch/arm.launch">
+            <arg name="sim" value="$(arg sim)" />
+        </include>
+    </group>
+
+    <!-- Run the main MoveIt executable with trajectory execution -->
+    <include file="$(find hlpr_j2s7s300_moveit_config)/launch/move_group.launch">
+        <arg name="allow_trajectory_execution" value="$(arg use_hlpr_traj_exec)"/>
+        <arg name="fake_execution" value="false"/>
+        <arg name="info" value="true"/>
+        <arg name="debug" value="false"/>
+        <arg name="use_octomap" value="$(arg use_octomap)"/>
+        <arg name="custom_sdf" value="$(arg custom_sdf)"/>
+    </include>
+
+</launch>
+
