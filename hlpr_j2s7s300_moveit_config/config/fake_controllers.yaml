@@ -10,4 +10,4 @@ controller_list:
       - j2s7s300_joint_7
   - name: fake_gripper_controller
     joints:
-      - j2s7s300_robotiq_85_left_knuckle_joint
+      - robotiq_85_left_knuckle_joint
