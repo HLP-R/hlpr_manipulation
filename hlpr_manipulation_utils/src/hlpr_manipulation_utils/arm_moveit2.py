@@ -8,6 +8,7 @@ import moveit_commander
 import moveit_msgs.msg
 import moveit_msgs.srv
 import geometry_msgs.msg
+import trajectory_msgs.msg
 import std_msgs.msg
 import wpi_jaco_msgs.msg
 import std_srvs.srv
@@ -142,7 +143,7 @@ class ArmMoveIt:
 
 		try:
 			jointAngle=compute_ik(msgs_request)
-			ans=list(jointAngle.solution.joint_state.position[1:7])
+			ans=list(jointAngle.solution.joint_state.position[1:8])
 			if jointAngle.error_code.val == -31:
 				rospy.logerr('No IK solution')
 				return None
@@ -745,8 +746,9 @@ class ArmMoveIt:
 		# convert end effector traj to joint traj
 		joint_traj = self._ee_traj_to_joint_traj(ee_traj, group_id)
 
+		print "joint_traj", joint_traj
 		# execute
-		self.execute_joint_trajectory(joint_traj, use_time, group_id)			
+		self.execute_joint_trajectory(joint_traj, use_custom_time, group_id)			
 
 	def get_current_pose(self, group_id=0):
 		'''Returns the current pose of the planning group
@@ -907,18 +909,18 @@ class ArmMoveIt:
     # ee_traj is PoseStamped list
     # returns JointTrajectory msg
 	def _ee_traj_to_joint_traj(self, ee_traj, group_id=0):
-		start_time = ee_traj[0].header.stamp.to_sec()
-		joint_traj = JointTrajectory()
+		start_time = ee_traj[0].header.stamp #.to_sec()
+		joint_traj = trajectory_msgs.msg.JointTrajectory()
 		joint_traj.header.frame_id = self.robot.get_planning_frame()
 		joint_traj.joint_names = self.group[group_id].get_joints()[1:-2]
 
 		for ee_target in ee_traj:
 			# do ik
-			joint_target = self.get_IK(ee_target.pose)
+			joint_target = self.get_IK(ee_target.pose, root='linear_actuator_link')
 
 			# add to joint traj
-			joint_pt = JointTrajectoryPoint()
-			joint_pt.time_from_start = rospy.Duration.from_sec(ee_target.header.stamp.to_sec()-start_time)
+			joint_pt = trajectory_msgs.msg.JointTrajectoryPoint()
+			joint_pt.time_from_start = rospy.Duration.from_sec(ee_target.header.stamp-start_time)
 			joint_pt.positions = copy.deepcopy(joint_target)
 			joint_traj.points.append(joint_pt)
 
