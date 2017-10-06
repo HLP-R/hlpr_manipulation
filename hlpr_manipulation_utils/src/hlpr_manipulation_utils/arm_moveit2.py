@@ -10,6 +10,7 @@ import moveit_msgs.srv
 import geometry_msgs.msg
 import std_msgs.msg
 import wpi_jaco_msgs.msg
+import std_srvs.srv
 import wpi_jaco_msgs.srv
 from math import pi, floor, ceil, fabs
 
@@ -95,7 +96,6 @@ class ArmMoveIt:
 			# NOTE: order that moveit currently is configured
 			# ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
 			self.continuous_joints_list = [0,3,4,5] # joints that are continous
-
 
 	def get_IK(self, new_pose, root = None, group_id=0):
 		""" Find the corresponding joint angles for an end effector pose
@@ -342,6 +342,17 @@ class ArmMoveIt:
 			self.group[group_id].set_planner_id(self.planner)
 		except moveit_commander.MoveItCommanderException as e:
 			rospy.logerr('Unable to set target and planner: {}'.format(e))
+
+	def set_use_time(self, use_time):
+		rospy.wait_for_service('use_custom_time')
+		use_custom_time = rospy.ServiceProxy('use_custom_time', std_srvs.srv.SetBool)
+		return use_custom_time(use_time)
+
+	def use_custom_time(self):
+		self.set_use_time(True)
+
+	def use_default_time(self):
+		self.set_use_time(False)
 
 	def get_plan(self,group_id=0):
 		'''Generates a plan for reaching the current goal
@@ -714,21 +725,28 @@ class ArmMoveIt:
 		else:
 			return plans
 
-		def execute_joint_trajectory(self, traj, use_time=True, group_id=0):
-			# set use time parameter in joint_trajectory_controller
-			# TODO: set use_time
+    # joint_traj is JointTrajectory msg
+	def execute_joint_trajectory(self, joint_traj, use_custom_time=True, group_id=0):
+		# set use time parameter in joint_trajectory_controller
+		if use_custom_time:
+			self.use_custom_time()
+		else:
+			self.use_default_time()
 
-			# build plan
-			plan = moveit_msgs.msg.RobotTrajectory()
-			plan.joint_trajectory = traj
-			
-			# execute
-			self.move_robot(plan, group_id)
+		# build plan
+		plan = moveit_msgs.msg.RobotTrajectory()
+		plan.joint_trajectory = joint_traj
+		
+		# execute
+		self.move_robot(plan, group_id)
 
-		def execute_cartesian_trajectory(self, traj, use_time=True, group_id=0):
-			# convert cart traj to joint traj by using ik with all points
+    # ee_traj is PoseStamped list
+	def execute_ee_trajectory(self, ee_traj, use_custom_time=True, group_id=0):
+		# convert end effector traj to joint traj
+		joint_traj = self._ee_traj_to_joint_traj(ee_traj, group_id)
 
-			self.execute_joint_trajectory(joint_traj, use_time, group_id)			
+		# execute
+		self.execute_joint_trajectory(joint_traj, use_time, group_id)			
 
 	def get_current_pose(self, group_id=0):
 		'''Returns the current pose of the planning group
@@ -886,6 +904,28 @@ class ArmMoveIt:
 		full_plan.joint_trajectory.points=all_points
 		return full_plan
 
+    # ee_traj is PoseStamped list
+    # returns JointTrajectory msg
+	def _ee_traj_to_joint_traj(self, ee_traj, group_id=0):
+		start_time = ee_traj[0].header.stamp.to_sec()
+		joint_traj = JointTrajectory()
+		joint_traj.header.frame_id = self.robot.get_planning_frame()
+		joint_traj.joint_names = self.group[group_id].get_joints()[1:-2]
+
+		for ee_target in ee_traj:
+			# do ik
+			joint_target = self.get_IK(ee_target.pose)
+
+			# add to joint traj
+			joint_pt = JointTrajectoryPoint()
+			joint_pt.time_from_start = rospy.Duration.from_sec(ee_target.header.stamp.to_sec()-start_time)
+			joint_pt.positions = copy.deepcopy(joint_target)
+			joint_traj.points.append(joint_pt)
+
+			# set joint target to ik result
+			self.set_joint_target(joint_target)
+
+		return joint_traj
 
 	''' Deprecated function definitions maintained for backwards compatibility '''
 
