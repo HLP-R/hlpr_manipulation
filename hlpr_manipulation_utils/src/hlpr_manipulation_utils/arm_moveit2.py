@@ -121,7 +121,7 @@ class ArmMoveIt:
 			The joint angles corresponding to the end effector pose
 		"""
 		
-		## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)
+		## from a defined newPose (geometry_msgs.msg.Pose()), return its correspondent joint angle(list)
 		rospy.wait_for_service('compute_ik')
 		compute_ik = rospy.ServiceProxy('compute_ik', moveit_msgs.srv.GetPositionIK)
 
@@ -143,7 +143,7 @@ class ArmMoveIt:
 
 		try:
 			jointAngle=compute_ik(msgs_request)
-			ans=list(jointAngle.solution.joint_state.position[1:8])
+			ans=self._simplify_joints(list(jointAngle.solution.joint_state.position[1:8]))
 			if jointAngle.error_code.val == -31:
 				rospy.logerr('No IK solution')
 				return None
@@ -345,9 +345,9 @@ class ArmMoveIt:
 			rospy.logerr('Unable to set target and planner: {}'.format(e))
 
 	def set_use_time(self, use_time):
-		rospy.wait_for_service('use_custom_time')
-		use_custom_time = rospy.ServiceProxy('use_custom_time', std_srvs.srv.SetBool)
-		return use_custom_time(use_time)
+		rospy.wait_for_service(self.arm_name+'_arm_driver/use_custom_time')
+		use_time_service = rospy.ServiceProxy(self.arm_name+'_arm_driver/use_custom_time', std_srvs.srv.SetBool)
+		return use_time_service(use_time)
 
 	def use_custom_time(self):
 		self.set_use_time(True)
@@ -733,10 +733,12 @@ class ArmMoveIt:
 			self.use_custom_time()
 		else:
 			self.use_default_time()
+			
+		print joint_traj
 
 		# build plan
 		plan = moveit_msgs.msg.RobotTrajectory()
-		plan.joint_trajectory = joint_traj
+		plan.joint_trajectory = copy.deepcopy(joint_traj)
 		
 		# execute
 		self.move_robot(plan, group_id)
@@ -745,8 +747,9 @@ class ArmMoveIt:
 	def execute_ee_trajectory(self, ee_traj, use_custom_time=True, group_id=0):
 		# convert end effector traj to joint traj
 		joint_traj = self._ee_traj_to_joint_traj(ee_traj, group_id)
+		
+		print ee_traj
 
-		print "joint_traj", joint_traj
 		# execute
 		self.execute_joint_trajectory(joint_traj, use_custom_time, group_id)			
 
@@ -794,6 +797,7 @@ class ArmMoveIt:
 			A RobotState object with only the given joints changed
 		'''
 		state = self._copy_state()
+		state.joint_state.position = list(state.joint_state.position)
 		if isinstance(joints, dict):
 			joint_names = joints.keys()
 			joint_idxs = [state.joint_state.name.index(j) for j in joint_names]
@@ -866,13 +870,15 @@ class ArmMoveIt:
 			##### AJINKYA
 			# joint_order = map(lambda s: "_".join(s.split("_")[1::]), 
 			#                   self.group[group_id].get_active_joints())
-			joint_order = self.group[group_id].get_active_joints()
+			#joint_order = self.group[group_id].get_active_joints()
+			#joint_order = self.group[group_id].get_joints()[1:-2]
 
-			continuous_joint_indices = [joint_order.index(j) for j in self.continuous_joints]
+			#continuous_joint_indices = [joint_order.index(j) for j in self.continuous_joints]
 
 			for i in xrange(len(joints)):
 				a = joints[i]
-				if i in continuous_joint_indices:
+				#if i in continuous_joint_indices:
+				if i in self.continuous_joints_list:
 					simplified_joints.append(self._simplify_angle(a))
 				else:
 					simplified_joints.append(a)
@@ -905,16 +911,34 @@ class ArmMoveIt:
 		full_plan = copy.deepcopy(plan_list[0])
 		full_plan.joint_trajectory.points=all_points
 		return full_plan
+		
+	def _build_joint_dict(self, names, positions):
+		if len(names) != len(positions):
+			rospy.logerr("Different number of names and positions: " + str(len(names)) + ', ' + str(len(positions)))
+			raise TypeError("Different number of names and positions: " + str(len(names)) + ', ' + str(len(positions)))
+		return {names[i]: positions[i] for i in range(len(names))}
 
     # ee_traj is PoseStamped list
     # returns JointTrajectory msg
 	def _ee_traj_to_joint_traj(self, ee_traj, group_id=0):
-		start_time = ee_traj[0].header.stamp #.to_sec()
+		start_time = ee_traj[0].header.stamp
 		joint_traj = trajectory_msgs.msg.JointTrajectory()
 		joint_traj.header.frame_id = self.robot.get_planning_frame()
 		joint_traj.joint_names = self.group[group_id].get_joints()[1:-2]
+		
+		# TODO: Check that start pose and current pose match
 
-		for ee_target in ee_traj:
+		# first ee pose acheived by current joint state
+		#joint_pt = trajectory_msgs.msg.JointTrajectoryPoint()
+		#joint_pt.positions = self.get_current_pose(group_id)
+		#joint_traj.points.append(joint_pt)
+		current_joint_state = self._build_joint_dict(joint_traj.joint_names, self.get_current_pose(group_id))
+
+		# compute the rest with ik
+		for ee_target in ee_traj[1:]:
+			# set start state to current joint state
+			self.set_start_state(current_joint_state, group_id)
+			
 			# do ik
 			joint_target = self.get_IK(ee_target.pose, root='linear_actuator_link')
 
@@ -924,10 +948,11 @@ class ArmMoveIt:
 			joint_pt.positions = copy.deepcopy(joint_target)
 			joint_traj.points.append(joint_pt)
 
-			# set joint target to ik result
-			self.set_joint_target(joint_target)
-
+			# set current joint state to ik result
+			current_joint_state = self._build_joint_dict(joint_traj.joint_names, joint_target)
+	
 		return joint_traj
+		
 
 	''' Deprecated function definitions maintained for backwards compatibility '''
 
