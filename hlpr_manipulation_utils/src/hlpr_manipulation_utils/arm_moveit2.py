@@ -98,7 +98,7 @@ class ArmMoveIt:
 			# ['right_shoulder_pan_joint', 'right_shoulder_lift_joint', 'right_elbow_joint', 'right_wrist_1_joint', 'right_wrist_2_joint', 'right_wrist_3_joint']
 			self.continuous_joints_list = [0,3,4,5] # joints that are continous
 
-	def get_IK(self, new_pose, root = None, group_id=0):
+	def get_IK(self, new_pose, robot_state=None, root = None, group_id=0):
 		""" Find the corresponding joint angles for an end effector pose
 		
 		Uses MoveIt! to compute the inverse kinematics for a given end
@@ -136,14 +136,22 @@ class ArmMoveIt:
 
 		msgs_request = moveit_msgs.msg.PositionIKRequest()
 		msgs_request.group_name = self.group[group_id].get_name() # name: arm
-		# msgs_request.robot_state = robot.get_current_state()
+		#msgs_request.robot_state = self.robot.get_current_state()
+
+		if not robot_state is None:
+			msgs_request.robot_state = robot_state
+		else:
+			msgs_request.robot_state = self.robot.get_current_state()
+		# print msgs_request.robot_state
+
 		msgs_request.pose_stamped = wkPose
 		msgs_request.timeout.secs = 2
 		msgs_request.avoid_collisions = False
 
 		try:
 			jointAngle=compute_ik(msgs_request)
-			ans=self._simplify_joints(list(jointAngle.solution.joint_state.position[1:8]))
+			#print jointAngle
+			ans=self._simplify_joints(list(jointAngle.solution.joint_state.position[14:21]))
 			if jointAngle.error_code.val == -31:
 				rospy.logerr('No IK solution')
 				return None
@@ -929,18 +937,25 @@ class ArmMoveIt:
 		# TODO: Check that start pose and current pose match
 
 		# first ee pose acheived by current joint state
-		#joint_pt = trajectory_msgs.msg.JointTrajectoryPoint()
-		#joint_pt.positions = self.get_current_pose(group_id)
-		#joint_traj.points.append(joint_pt)
-		current_joint_state = self._build_joint_dict(joint_traj.joint_names, self.get_current_pose(group_id))
+		joint_pt = trajectory_msgs.msg.JointTrajectoryPoint()
+		# joint_pt.positions = self.get_IK(ee_traj[0].pose, root='linear_actuator_link')#self.get_current_pose(group_id)
+		joint_pt.positions = self.get_current_pose(group_id)
+		joint_traj.points.append(joint_pt)
+		print 'IK Solution =', joint_pt.positions
+		print 'Current Pose solution =', self.get_current_pose(group_id)
+		#current_joint_state = self._build_joint_dict(joint_traj.joint_names, self.get_current_pose(group_id))
+		current_robot_state = self.state_from_joints(self._build_joint_dict(joint_traj.joint_names, self.get_current_pose(group_id)))
+		# current_robot_state = self.state_from_joints(self._build_joint_dict(joint_traj.joint_names, joint_pt.positions))
 
+		print 'ee_traj =', ee_traj
 		# compute the rest with ik
-		for ee_target in ee_traj[1:]:
+		for i, ee_target in enumerate(ee_traj[:7]):
+			print i
 			# set start state to current joint state
-			self.set_start_state(current_joint_state, group_id)
+			#self.set_start_state(current_joint_state, group_id)
 			
 			# do ik
-			joint_target = self.get_IK(ee_target.pose, root='linear_actuator_link')
+			joint_target = self.get_IK(ee_target.pose, robot_state=current_robot_state, root='linear_actuator_link')
 
 			# add to joint traj
 			joint_pt = trajectory_msgs.msg.JointTrajectoryPoint()
@@ -948,8 +963,10 @@ class ArmMoveIt:
 			joint_pt.positions = copy.deepcopy(joint_target)
 			joint_traj.points.append(joint_pt)
 
+			print 'IK Solution =', joint_target
 			# set current joint state to ik result
-			current_joint_state = self._build_joint_dict(joint_traj.joint_names, joint_target)
+			#current_joint_state = self._build_joint_dict(joint_traj.joint_names, joint_target)
+			current_robot_state = self.state_from_joints(self._build_joint_dict(joint_traj.joint_names, joint_target))
 	
 		return joint_traj
 		
