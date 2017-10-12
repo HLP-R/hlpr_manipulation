@@ -1,0 +1,24 @@
+controller_list:
+  - name: "right_arm_jaco_cartesian_trajectory_controller"
+    action_ns: trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - right_eef_x
+      - right_eef_y
+      - right_eef_z
+      - right_eef_roll
+      - right_eef_pitch
+      - right_eef_yaw
+
+  - name: "left_arm_jaco_cartesian_trajectory_controller"
+    action_ns: trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - left_eef_x
+      - left_eef_y
+      - left_eef_z
+      - left_eef_roll
+      - left_eef_pitch
+      - left_eef_yaw
