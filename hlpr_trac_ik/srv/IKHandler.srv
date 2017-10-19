@@ -3,5 +3,6 @@ geometry_msgs/Pose[] goals
 float32[] tolerance
 bool verbose
 ---
+string[] joint_names
 trajectory_msgs/JointTrajectoryPoint[] poses
 bool success
