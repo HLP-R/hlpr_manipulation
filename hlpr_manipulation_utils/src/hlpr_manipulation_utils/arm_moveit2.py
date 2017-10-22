@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import copy
 import rospy
 import moveit_commander
@@ -57,6 +58,9 @@ class ArmMoveIt:
 
         # self.pose = geometry_msgs.msg.PoseStamped()
 
+        # Check if we're using the 7dof
+        is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+
         ## Interface to the robot as a whole.
         self.robot = moveit_commander.RobotCommander()
         
@@ -75,7 +79,10 @@ class ArmMoveIt:
 
         ## The names of continuous joints. They will always be remapped
         ## into (-pi,pi)
-        self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
+        if is_7dof:
+            self.continuous_joints = ['joint_1','joint_3','joint_5','joint_7']
+        else:
+            self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
 
     def get_IK(self, new_pose, root = None, group_id=0):
         """ Find the corresponding joint angles for an end effector pose
