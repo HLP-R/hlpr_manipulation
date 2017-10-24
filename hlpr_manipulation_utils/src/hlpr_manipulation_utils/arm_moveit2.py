@@ -250,7 +250,6 @@ class ArmMoveIt:
         RobotTrajectory
             the plan for reaching the target position
         """
-        
         self.set_start_state(starting_config)
         self.set_ee_target(target,group_id)
         return self.get_plan()
@@ -270,10 +269,11 @@ class ArmMoveIt:
             default for now.
         """
 
-        if joint_config!=None:
-            start_state = self.state_from_joints(joint_config)
+        if joint_config is not None:
+            start_state = joint_config
         else:
             start_state = self._copy_state()
+
         try:
             self.group[group_id].set_start_state(start_state)
         except moveit_commander.MoveItCommanderException as e:
@@ -316,6 +316,9 @@ class ArmMoveIt:
             default for now.
         """
         try:
+            # sanitize possible numpy before sending off to moveit
+            if type(target).__module__ == 'numpy':
+                target = target.tolist()
             self.group[group_id].set_pose_target(target)
             self.group[group_id].set_planner_id(self.planner)
         except moveit_commander.MoveItCommanderException as e:
@@ -443,15 +446,17 @@ class ArmMoveIt:
             the plan for reaching the target position
         '''
         all_plans = []
-        current_config = starting_config
+        plan_start_config = starting_config
         for target in targets:
-            plan = self.plan_ee_pos(target, current_config, group_id=group_id)
-            if plan!=None:
-                all_plans.append(plan)
-                try:
-                    current_config=self.state_from_trajectory(plan.joint_trajectory)
-                except moveit_commander.MoveItCommanderException as e:
-                    rospy.logerr("Couldn't set configuration. Error:{}".format(e))
+            plan = self.plan_ee_pos(target, plan_start_config,
+                                    group_id=group_id)
+            if plan is not None:
+                if len(plan.joint_trajectory.points) != 0:
+                    all_plans.append(plan)
+                    plan_start_config = self.state_from_trajectory(
+                        plan.joint_trajectory)
+            else:
+                rospy.logerr('EE waypoints could not calculate plan')
         return all_plans
 
     def move_through_waypoints(self, targets, is_joint_pos=False, group_id=0):
@@ -479,13 +484,18 @@ class ArmMoveIt:
         bool
             True on success
         '''
-        plans = self.plan_waypoints(self, targets, is_joint_pos, 
+        plans = self.plan_waypoints(targets, is_joint_pos, 
                                    group_id=group_id)
         if plans == None or len(plans)==0:
+            rospy.logwarn('no plans generated')
             return False
         success = True
-        for plan in plans:
+        for idx, plan in enumerate(plans):
             success = success and self.move_robot(plan, group_id)
+            # unfortunate hack. There appears to be a significant settling time
+            # for the kinova arm.
+            if not is_joint_pos and idx < (len(plans)-1):
+                rospy.sleep(0.5)
         return success
 
     def move_through_joint_waypoints(self, targets, group_id=0):
@@ -683,9 +693,10 @@ class ArmMoveIt:
             the plan for reaching the target position
         '''
         if is_joint_pos:
+            print('joint pos in plan_waypoints')
             plans = self.plan_joint_waypoints(targets, group_id, starting_config)
         else:
-            plans = self.plan_ee_waypoints(targets, gorup_id, starting_config)
+            plans = self.plan_ee_waypoints(targets, group_id, starting_config)
         
         if merge_plans:
             return self._merge_plans(plans)
@@ -736,6 +747,7 @@ class ArmMoveIt:
             A RobotState object with only the given joints changed
         '''
         state = self._copy_state()
+        print('joints: ' + str(type(joints)))
         if isinstance(joints, dict):
             joint_names = joints.keys()
             joint_idxs = [state.joint_state.name.index(j) for j in joint_names]
@@ -777,7 +789,7 @@ class ArmMoveIt:
             joint_name = trajectory.joint_names[i]
             idx = state.joint_state.name.index(joint_name)
             joints[idx]=target.positions[i]
-        state.joint_state.position=joints
+        state.joint_state.position = joints
         return state
 
     def _simplify_angle(self, angle):
