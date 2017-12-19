@@ -1,0 +1,10 @@
+<launch>
+
+    <!-- Params for the octomap monitor -->
+    <param name="octomap_frame" type="string" value="odom_combined" />
+    <param name="octomap_resolution" type="double" value="0.05" />
+    <param name="max_range" type="double" value="5.0" />
+
+    <rosparam command="load" file="$(find hlpr_j2s7s300_moveit_config)/config/sensors_kinect.yaml" />
+
+</launch>
