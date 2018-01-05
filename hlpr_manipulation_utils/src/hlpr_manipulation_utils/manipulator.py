@@ -6,6 +6,9 @@ from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
 #from wpi_jaco_msgs.srv import GravComp
 from hlpr_manipulation_utils.arm_moveit import *
 
+from wsg_50_common.msg import Cmd as WeissGripperCmd
+from wsg_50_common.msg import Status as WeissGripperStat
+
 import rospy
 from math import pi, sqrt
 from collections import namedtuple
@@ -80,6 +83,45 @@ class Gripper:
     
   def close(self, speed = 0.02, force = 100):
     self.set_pos(0,speed,force)
+
+class WeissGripper:
+
+    CMD_TOPIC = "/wsg_50_driver/goal_position"
+    STAT_TOPIC = "/wsg_50_driver/status"
+
+    def __init__(self, prefix='right'):
+        self.pub_grp = rospy.Publisher(WeissGripper.CMD_TOPIC, WeissGripperCmd, queue_size=10)
+        self.cmd = WeissGripperCmd()
+
+        rospy.Subscriber(WeissGripper.STAT_TOPIC, WeissGripperStat, self.st_cb)
+        self.gripper_stat = WeissGripperStat()
+
+    def st_cb(self, in_stat):
+        self.gripper_stat = in_stat
+
+    def get_status(self):
+        return self.gripper_stat.status
+
+    def get_pos(self):
+        return self.gripper_stat.width
+
+    def get_force(self):
+        return self.gripper_stat.force
+
+    def set_pos(self, position, speed=50, rate=10, iterations=1):
+        self.cmd.pos = position
+        self.cmd.speed = speed
+        rrate = rospy.Rate(rate)
+
+        for i in range(iterations):
+            self.pub_grp.publish(self.cmd)
+            rrate.sleep()
+
+    def open(self, speed=50):
+        self.set_pos(65, speed)
+
+    def close(self, speed=50):
+        self.set_pos(0, speed)
 
 class LinearActuator:
   def __init__(self):
