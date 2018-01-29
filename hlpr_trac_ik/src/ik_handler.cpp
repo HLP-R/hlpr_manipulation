@@ -66,7 +66,9 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
     }
     res.poses.push_back(pt);
     res.success = succeed;
-    ROS_INFO("sending back response: %s", poseStr.c_str());
+    if (verbose){
+        ROS_INFO("sending back response: %s", poseStr.c_str());
+    }
   }
   return true;
 }

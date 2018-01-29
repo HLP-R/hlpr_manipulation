@@ -3,17 +3,32 @@
 
     <!-- Setup parameters for the IK service -->
     <arg name="base_chain" default="linear_actuator_link"/>
-    <arg name="end_chain" default="right_ee_link"/>
+    <arg name="end_chain_6dof" default="right_ee_link"/>
+    <arg name="end_chain_7dof" default="j2s7s300_ee_link"/>
     <arg name="timeout_in_sec" default="0.005"/>
     <arg name="error" default="1e-5"/>
     <arg name="distance_flag" default="true"/>
-   
-    <node name="trac_ik_service" pkg="hlpr_trac_ik" type="hlpr_trac_ik" output="screen">
-        <param name="base_chain" value="$(arg base_chain)"/>
-        <param name="end_chain" value="$(arg end_chain)"/>
-        <param name="timeout_in_sec" value="$(arg timeout_in_sec)"/>
-        <param name="error" value="$(arg error)"/>
-        <param name="distance_flag" value="$(arg distance_flag)"/>
-    </node>
+    
+    <!-- 7-DoF -->
+    <group if="$(optenv VECTOR_HAS_KINOVA_7DOF_ARM false)">
+        <node name="trac_ik_service" pkg="hlpr_trac_ik" type="hlpr_trac_ik" output="screen">
+            <param name="base_chain" value="$(arg base_chain)"/>
+            <param name="end_chain" value="$(arg end_chain_7dof)"/>
+            <param name="timeout_in_sec" value="$(arg timeout_in_sec)"/>
+            <param name="error" value="$(arg error)"/>
+            <param name="distance_flag" value="$(arg distance_flag)"/>
+        </node>
+    </group>
+
+    <!-- 6-DoF -->
+    <group unless="$(optenv VECTOR_HAS_KINOVA_7DOF_ARM false)">
+        <node name="trac_ik_service" pkg="hlpr_trac_ik" type="hlpr_trac_ik" output="screen">
+            <param name="base_chain" value="$(arg base_chain)"/>
+            <param name="end_chain" value="$(arg end_chain_6dof)"/>
+            <param name="timeout_in_sec" value="$(arg timeout_in_sec)"/>
+            <param name="error" value="$(arg error)"/>
+            <param name="distance_flag" value="$(arg distance_flag)"/>
+        </node>
+    </group>
 
 </launch>
