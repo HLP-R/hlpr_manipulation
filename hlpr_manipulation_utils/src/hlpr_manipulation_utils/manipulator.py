@@ -4,7 +4,7 @@ from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, Gripper
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
 #from wpi_jaco_msgs.srv import GravComp
-from hlpr_manipulation_utils.arm_moveit import *
+from hlpr_manipulation_utils.arm_moveit2 import *
 
 import rospy
 from math import pi, sqrt
@@ -134,7 +134,8 @@ class Arm:
       self.arm_joint_names = [  self._arm_prefix + "_joint_1",   self._arm_prefix + "_joint_2",   self._arm_prefix + "_joint_3", self._arm_prefix + "_joint_4",   self._arm_prefix + "_joint_5",   self._arm_prefix + "_joint_6", self._arm_prefix + "_joint_7"]
       joint_state_topic = "/joint_states"
       # Load the trajectory client
-      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_trajectory_controller/trajectory', FollowJointTrajectoryAction)
+      #self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_trajectory_controller/trajectory', FollowJointTrajectoryAction)
+      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/right_arm_jaco_trajectory_controller/trajectory', FollowJointTrajectoryAction)
 
     self.joint_states = [0 for i in range(0,len( self.arm_joint_names))]
     

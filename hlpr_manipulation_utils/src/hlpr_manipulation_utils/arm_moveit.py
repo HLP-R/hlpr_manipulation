@@ -14,7 +14,7 @@ from math import pi, floor, ceil, fabs
 
 class ArmMoveIt:
 
-  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault", orientation_tolerance=None):
+  def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault", orientation_tolerance=None, _arm_name='right'):
 
     # Make sure the moveit service is up and running
     rospy.logwarn("Waiting for MoveIt! to load")
@@ -42,7 +42,7 @@ class ArmMoveIt:
     ## to one group of joints.  In this case the group is the joints in the left
     ## arm.  This interface can be used to plan and execute motions on the left
     ## arm.
-    self.group = [moveit_commander.MoveGroupCommander("arm")]
+    self.group = [moveit_commander.MoveGroupCommander(_arm_name+"_arm")]
 
     # Set orientation tolerance if provided
     if orientation_tolerance is not None:
@@ -157,6 +157,7 @@ class ArmMoveIt:
     ## If merge is false - then several plans in an array are returned
 
     # Plan each pose individually and stitch together
+    print 'plan_targetInputWaypoint', 'targets', targets[0]
     try: 
       full_plan = []
       points = []
