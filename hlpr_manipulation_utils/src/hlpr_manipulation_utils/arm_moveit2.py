@@ -747,12 +747,15 @@ class ArmMoveIt:
             A RobotState object with only the given joints changed
         '''
         state = self._copy_state()
-        print('joints: ' + str(type(joints)))
+        #print('joints: ' + str(type(joints)))
+        simple_joints = self._simplify_joints(joints)
         if isinstance(joints, dict):
             joint_names = joints.keys()
-            joint_idxs = [state.joint_state.name.index(j) for j in joint_names]
-            for i in range(len(joint_idxs)):
-                state.joint_state.position[i]=joints[joint_names[i]]
+            new_joints = [x for x in state.joint_state.position]
+            
+            for jname in joint_names:
+                new_joints[state.joint_state.name.index(jname)]=simple_joints[jname]
+            state.joint_state.position = new_joints
         elif isinstance(joints, list):
             state.joint_state.position = copy.copy(joints)
         else:
