@@ -51,7 +51,7 @@ class ArmMoveIt:
         try:
             rospy.wait_for_service('compute_ik')
         except rospy.ROSException, e:
-            rospy.logerr("No moveit service detected. Exiting")
+            rospy.logerr("No MoveIt service detected. Exiting")
             exit()
         else:
             rospy.loginfo("MoveIt detected: arm planner loading")
@@ -712,11 +712,13 @@ class ArmMoveIt:
         else:
             return plans
 
-    def get_current_pose(self, group_id=0):
+    def get_current_pose(self, simplify=True,group_id=0):
         '''Returns the current pose of the planning group
         
         Parameters
         ----------
+        simplify : bool, optional
+            whether or not to simplify continuous joints into +/- pi
         group_id : int, optional
             the index of the group for which to calculate the IK.  Used 
             for compatibility with future functionality; leave set to 
@@ -724,10 +726,13 @@ class ArmMoveIt:
 
         Returns
         ----------
-        list
-            the joint positions, mapped into (-pi,pi)
+        dict
+            the joint positions, mapped into (-pi,pi) if simplify
         '''
-        return self._simplify_joints(self.group[group_id].get_current_joint_values(), group_id)
+        if simplify:
+            return dict(zip(self.group[group_id].get_active_joints(),self._simplify_joints(self.group[group_id].get_current_joint_values(), group_id)))
+        else:
+            return dict(zip(self.group[group_id].get_active_joints(),self.group[group_id].get_current_joint_values())) 
 
 
     def state_from_joints(self, joints):
@@ -740,7 +745,7 @@ class ArmMoveIt:
 
         Parameters
         ----------
-        target : list or dict
+        joints : list or dict
             if a list, a list of positions for all active joints in 
             the group; if a dictionary, a mapping of joint names to 
             positions for the joints that should be moved (all other 
