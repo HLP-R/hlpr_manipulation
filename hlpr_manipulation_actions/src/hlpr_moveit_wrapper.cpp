@@ -33,10 +33,10 @@ HlprMoveitWrapper::HlprMoveitWrapper() :
   clearOctomapClient = n.serviceClient<std_srvs::Empty>("clear_octomap");
   planningSceneClient = n.serviceClient<moveit_msgs::GetPlanningScene>("/get_planning_scene");
 
-  jacoArmGroup = new move_group_interface::MoveGroup("arm");
+  jacoArmGroup = new moveit::planning_interface::MoveGroup("arm");
   jacoArmGroup->startStateMonitor();
 
-  planningSceneInterface = new move_group_interface::PlanningSceneInterface();
+  planningSceneInterface = new moveit::planning_interface::PlanningSceneInterface();
   /*planningSceneMonitor = planning_scene_monitor::PlanningSceneMonitorPtr(new
                                                                             planning_scene_monitor::PlanningSceneMonitor("robot_description"));
   */
@@ -152,7 +152,7 @@ void HlprMoveitWrapper::moveToPose(const rail_manipulation_msgs::MoveToPoseGoalC
     jacoArmGroup->setStartStateToCurrentState();
     ROS_INFO("Planning and moving...");
     //armGroup->asyncMove();
-    move_group_interface::MoveItErrorCode errorCode = jacoArmGroup->move();
+    moveit::planning_interface::MoveItErrorCode errorCode = jacoArmGroup->move();
     ROS_INFO("Finished plan and move");
     if (errorCode == moveit_msgs::MoveItErrorCodes::SUCCESS)
     {
@@ -254,7 +254,7 @@ void HlprMoveitWrapper::moveToJointPose(const rail_manipulation_msgs::MoveToJoin
   //jacoArmGroup->setJointValueTarget(jointGoal);
   ROS_INFO("Planning and moving...");
   //armGroup->asyncMove();
-  move_group_interface::MoveItErrorCode errorCode = jacoArmGroup->move();
+  moveit::planning_interface::MoveItErrorCode errorCode = jacoArmGroup->move();
   ROS_INFO("Finished plan and move");
   if (errorCode == moveit_msgs::MoveItErrorCodes::SUCCESS)
   {
@@ -352,7 +352,7 @@ bool HlprMoveitWrapper::cartesianPathCallback(rail_manipulation_msgs::CartesianP
   */
 
   //execute the trajectory
-  move_group_interface::MoveGroup::Plan plan;
+  moveit::planning_interface::MoveGroup::Plan plan;
   plan.trajectory_ = finalTraj;
   moveit::core::robotStateToRobotStateMsg(*(jacoArmGroup->getCurrentState()), plan.start_state_);
   //plan.planning_time_ = 0.0; //does this matter?
