@@ -26,9 +26,13 @@ class ArmMoveIt:
     else:
       rospy.loginfo("MoveIt detected: arm planner loading")
 
+    robot_name = os.environ['ROBOT_NAME']
+
     # Check if we're using the 7dof
-    #is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']  
-    is_7dof = True # Update for POLI2
+    if robot_name == 'poli2':
+      is_7dof = true
+    else:
+      is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']  
 
     # self.pose = geometry_msgs.msg.PoseStamped()
     ## Instantiate a RobotCommander object.  This object is an interface to
