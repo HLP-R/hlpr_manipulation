@@ -125,7 +125,10 @@ class Arm:
 
     self._arm_prefix = arm_prefix
 
-    robot_name = os.environ['ROBOT_NAME']
+    if 'ROBOT_NAME' in os.environ:
+      robot_name = os.environ['ROBOT_NAME']
+    else:
+      robot_name = None
 
     # Check if we're using the 7dof
     if robot_name == 'poli2':
