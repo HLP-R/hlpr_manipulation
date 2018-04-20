@@ -33,7 +33,7 @@ HlprMoveitWrapper::HlprMoveitWrapper() :
   clearOctomapClient = n.serviceClient<std_srvs::Empty>("clear_octomap");
   planningSceneClient = n.serviceClient<moveit_msgs::GetPlanningScene>("/get_planning_scene");
 
-  jacoArmGroup = new moveit::planning_interface::MoveGroupInterface("arm");
+  jacoArmGroup = new moveit::planning_interface::MoveGroup("arm");
   jacoArmGroup->startStateMonitor();
 
   planningSceneInterface = new moveit::planning_interface::PlanningSceneInterface();
@@ -352,7 +352,7 @@ bool HlprMoveitWrapper::cartesianPathCallback(rail_manipulation_msgs::CartesianP
   */
 
   //execute the trajectory
-  moveit::planning_interface::MoveGroupInterface::Plan plan;
+  moveit::planning_interface::MoveGroup::Plan plan;
   plan.trajectory_ = finalTraj;
   moveit::core::robotStateToRobotStateMsg(*(jacoArmGroup->getCurrentState()), plan.start_state_);
   //plan.planning_time_ = 0.0; //does this matter?
