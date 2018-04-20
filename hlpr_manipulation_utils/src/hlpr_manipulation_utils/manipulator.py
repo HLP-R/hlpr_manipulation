@@ -1,6 +1,6 @@
-import roslib; roslib.load_manifest('hlpr_manipulation_utils')
+import roslib
 from sensor_msgs.msg import JointState
-from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, GripperCmd, GripperStat
+from robotiq_85_msgs.msg import GripperCmd, GripperStat
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
 #from wpi_jaco_msgs.srv import GravComp
@@ -15,15 +15,14 @@ import time
 import os
 
 class Manipulator:
-  def __init__(self, arm_prefix = 'right'):
+  def __init__(self):
 
-    self.arm = Arm(arm_prefix)
+    self.arm = Arm()
     self.gripper = Gripper()
-    self.linear_actuator = LinearActuator()
 
 class Gripper:
-  def __init__(self, prefix='right'):
-    self.pub_grp  = rospy.Publisher('/vector/'+prefix+'_gripper/cmd', GripperCmd, queue_size = 10)
+  def __init__(self):
+    self.pub_grp  = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size = 10)
     self.cmd = GripperCmd()
     
     #i have it here but it is not useful
@@ -31,7 +30,7 @@ class Gripper:
     #self.last_js_update = None
     #self.joint_state = None
     
-    rospy.Subscriber('/vector/'+prefix+'_gripper/stat', GripperStat, self.st_cb)
+    rospy.Subscriber('gripper/stat', GripperStat, self.st_cb)
     self.last_st_update = None
     self.gripper_stat = GripperStat()
     
@@ -81,40 +80,13 @@ class Gripper:
   def close(self, speed = 0.02, force = 100):
     self.set_pos(0,speed,force)
 
-class LinearActuator:
-  def __init__(self):
-    self.pub_lin  = rospy.Publisher('/vector/linear_actuator_cmd', LinearActuatorCmd, queue_size = 10)
-    self.cmd = LinearActuatorCmd()
-
-    #i agree that the naming is weird
-    rospy.Subscriber('/vector/joint_states', JointState, self.js_cb)
-    self.last_js_update = None
-    self.joint_state = None
-    
-  def js_cb(self, inState):
-    self.joint_state = inState.position  
-    self.last_js_update = rospy.get_time()
-
-
-  def set_pos(self, position, vel = 0.):
-    self.cmd = LinearActuatorCmd()
-    self.cmd.desired_position_m = position
-    if not vel == 0:
-      print 'What are you thinking? Setting the vel back to 0. If you are sure, change this line in the code'
-      vel = 0.
-
-    #probably feed forward velocity
-    self.cmd.fdfwd_vel_mps = vel
-
-    self.pub_lin.publish(self.cmd) 
 
 class Arm:
-  def __init__(self, arm_prefix = 'right'):
-
-    self._arm_prefix = arm_prefix
+  def __init__(self):
 
     # Get the 7dof flag value
-    is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+    # is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+    is_7dof = True # HACK need to fix for poli2
     if is_7dof == 'true':
         dof = 7
     else:
