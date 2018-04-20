@@ -1,4 +1,4 @@
-import roslib
+import roslib; roslib.load_manifest('hlpr_manipulation_utils')
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
@@ -95,7 +95,6 @@ class Gripper:
 
 class LinearActuator:
   def __init__(self):
-  
     self.pub_lin  = rospy.Publisher('/vector/linear_actuator_cmd', LinearActuatorCmd, queue_size = 10)
     self.cmd = LinearActuatorCmd()
 
