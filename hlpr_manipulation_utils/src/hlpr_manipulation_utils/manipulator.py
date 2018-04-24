@@ -1,6 +1,5 @@
 import roslib; roslib.load_manifest('hlpr_manipulation_utils')
 from sensor_msgs.msg import JointState
-from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, GripperCmd, GripperStat
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from wpi_jaco_msgs.msg import AngularCommand, CartesianCommand
 #from wpi_jaco_msgs.srv import GravComp
@@ -14,6 +13,11 @@ import actionlib
 import time
 import os
 
+if os.environ['ROBOT_NAME'] == 'poli2':
+  from robotiq_85_msgs.msg import GripperCmd, GripperStat
+else: 
+  from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, GripperCmd, GripperStat
+
 class Manipulator:
   def __init__(self, arm_prefix = 'right'):
 
@@ -23,7 +27,16 @@ class Manipulator:
 
 class Gripper:
   def __init__(self, prefix='right'):
-    self.pub_grp  = rospy.Publisher('/vector/'+prefix+'_gripper/cmd', GripperCmd, queue_size = 10)
+
+    robot_name = os.environ['ROBOT_NAME']
+
+    if robot_name is 'poli2':
+      self.pub_grp  = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size = 10)
+      rospy.Subscriber('gripper/stat', GripperStat, self.st_cb)
+    else:
+      self.pub_grp  = rospy.Publisher('/vector/'+prefix+'_gripper/cmd', GripperCmd, queue_size = 10)
+      rospy.Subscriber('/vector/'+prefix+'_gripper/stat', GripperStat, self.st_cb)
+
     self.cmd = GripperCmd()
     
     #i have it here but it is not useful
@@ -31,7 +44,6 @@ class Gripper:
     #self.last_js_update = None
     #self.joint_state = None
     
-    rospy.Subscriber('/vector/'+prefix+'_gripper/stat', GripperStat, self.st_cb)
     self.last_st_update = None
     self.gripper_stat = GripperStat()
     
@@ -113,8 +125,17 @@ class Arm:
 
     self._arm_prefix = arm_prefix
 
-    # Get the 7dof flag value
-    is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+    if 'ROBOT_NAME' in os.environ:
+      robot_name = os.environ['ROBOT_NAME']
+    else:
+      robot_name = None
+
+    # Check if we're using the 7dof
+    if robot_name == 'poli2':
+      is_7dof = true
+    else:
+      is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM'] 
+
     if is_7dof == 'true':
         dof = 7
     else:

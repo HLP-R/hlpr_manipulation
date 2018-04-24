@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hlpr_manipulation_actions)
+add_compile_options(-std=c++11)
 
 if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
