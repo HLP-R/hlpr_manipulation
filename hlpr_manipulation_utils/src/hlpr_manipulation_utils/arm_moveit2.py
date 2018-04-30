@@ -486,12 +486,14 @@ class ArmMoveIt:
         '''
         all_plans = []
         current_config = starting_config
+        print targets
         for target in targets:
             plan = self.plan_ee_pos(target, current_config, group_id=group_id)
             if plan!=None:
                 all_plans.append(plan)
                 try:
                     current_config=self.state_from_trajectory(plan.joint_trajectory)
+                    print "After: ", target, current_config
                 except moveit_commander.MoveItCommanderException as e:
                     rospy.logerr("Couldn't set configuration. Error:{}".format(e))
         return all_plans
@@ -521,8 +523,7 @@ class ArmMoveIt:
         bool
             True on success
         '''
-        plans = self.plan_waypoints(self, targets, is_joint_pos, 
-                                   group_id=group_id)
+        plans = self.plan_waypoints(targets, is_joint_pos, group_id=group_id)
         if plans == None or len(plans)==0:
             return False
         success = True
@@ -626,8 +627,8 @@ class ArmMoveIt:
         bool
             True on success
         '''
-        return self.move_through_waypoints(targets, is_joint_pos=False, 
-                                    group_id=group_id)    
+        print "move ee waypoints:", self, targets
+        return self.move_through_waypoints( targets, is_joint_pos=False,group_id=group_id)    
 
     def move_to_pose(self, target, is_joint_pos=False, group_id=0):
         '''Uses MoveIt! to generate a plan then move the robot.
@@ -727,7 +728,7 @@ class ArmMoveIt:
         if is_joint_pos:
             plans = self.plan_joint_waypoints(targets, group_id, starting_config)
         else:
-            plans = self.plan_ee_waypoints(targets, gorup_id, starting_config)
+            plans = self.plan_ee_waypoints(targets, group_id, starting_config)
         
         if merge_plans:
             return self._merge_plans(plans)
@@ -816,8 +817,9 @@ class ArmMoveIt:
         elif isinstance(joints, list):
             state.joint_state.position = copy.copy(joints)
         else:
+            state.joint_state.position = copy.copy(joints.joint_state.position)
             rospy.logerr("Joints must be provided as a list or dictionary")
-            raise TypeError("Joints must be provided as a list or dictionary")
+            #raise TypeError("Joints must be provided as a list or dictionary")
         return state
 
     def state_from_trajectory(self, trajectory, point_idx=-1):
