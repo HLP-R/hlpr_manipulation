@@ -53,29 +53,29 @@ class Gripper:
   #  self.last_js_update = rospy.get_time()
     
   def st_cb(self, inStat):
-    self.gripperStat = inStat
+    self.gripper_stat = inStat
     self.last_st_update = None
     
   def is_ready(self):
-    return self.gripperStat.is_ready
+    return self.gripper_stat.is_ready
   
   def is_reset(self):
-    return self.gripperStat.is_reset
+    return self.gripper_stat.is_reset
 
   def is_moving(self):
-    return self.gripperStat.is_moving
+    return self.gripper_stat.is_moving
     
   def object_detected(self):
-    return self.gripperStat.obj_detected
+    return self.gripper_stat.obj_detected
     
   def get_pos(self):
-    return self.gripperStat.position
+    return self.gripper_stat.position
     
   def get_commanded_pos(self):
-    return self.gripperStat.requested_position
+    return self.gripper_stat.requested_position
 
   def get_applied_current(self):
-    return self.gripperStat.current
+    return self.gripper_stat.current
 
   def set_pos(self, position, speed = 0.02, force = 100, rate = 10, iterations = 5):
     
