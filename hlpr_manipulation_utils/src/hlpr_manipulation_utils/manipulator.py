@@ -28,7 +28,10 @@ class Manipulator:
 class Gripper:
   def __init__(self, prefix='right'):
 
-    robot_name = os.environ['ROBOT_NAME']
+    if 'ROBOT_NAME' in os.environ:
+      robot_name = os.environ['ROBOT_NAME']
+    else:
+      robot_name = None
 
     if robot_name is 'poli2':
       self.pub_grp  = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size = 10)
