@@ -33,7 +33,7 @@ class Gripper:
     else:
       robot_name = None
 
-    if robot_name is 'poli2':
+    if robot_name == 'poli2':
       self.pub_grp  = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size = 10)
       rospy.Subscriber('gripper/stat', GripperStat, self.st_cb)
     else:

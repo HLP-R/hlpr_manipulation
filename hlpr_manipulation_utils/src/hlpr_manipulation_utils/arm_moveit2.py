@@ -137,7 +137,7 @@ class ArmMoveIt:
         except rospy.ServiceException, e:
             rospy.logerr("Service call failed: {}".format(e))
 
-    def get_FK(self, root = 'base_link'):
+    def get_FK(self, root = None, state = None):
         """ Find the end effector pose for the current joint configuration
         
         Uses MoveIt! to compute the forward kinematics for a given joint
@@ -147,20 +147,29 @@ class ArmMoveIt:
         ----------
         root : string, optional
             the root link (if none is provided, uses the planning frame)
+        state : RobotState, optional
+            the state to calculate FK for (if none is provided, uses the 
+                current state)
         
         Returns
         ----------
-        geometry_msgs/PoseStamped
+        geometry_msgs/PoseStamped []
             the pose of the end effector
         """
+        if root is None:
+            root = self.group[0].get_pose_reference_frame()
+        
         rospy.wait_for_service('compute_fk')
         compute_fk = rospy.ServiceProxy('compute_fk', moveit_msgs.srv.GetPositionFK)
 
         header = std_msgs.msg.Header()
         header.frame_id = root
         header.stamp = rospy.Time.now()
-        fk_link_names = ['right_ee_link']
-        robot_state = self.robot.get_current_state()    
+        fk_link_names = ['j2s7s300_ee_link']
+        if state is None:
+            robot_state = self.robot.get_current_state()
+        else:
+            robot_state = state
         try:
             reply=compute_fk(header,fk_link_names,robot_state)
             return reply.pose_stamped
