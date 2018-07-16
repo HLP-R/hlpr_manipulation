@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="fixed_frame" default="m1ns200_link_base"/>
+    <arg name="joint_ordering" default="[m1n6s200_joint_1, m1n6s200_joint_2, m1n6s200_joint_3, m1n6s200_joint_4, m1n6s200_joint_5, m1n6s200_joint_6]"/> 
     <arg name="config_file" default="mico.config"/>
 
     <node name="hlpr_relaxed_ik_service" pkg="hlpr_relaxed_ik" type="ik_handler.py" output="screen">
+        <rosparam param="joint_ordering" subst_value="True">$(arg joint_ordering)</rosparam>
+        <param name="fixed_frame" value="$(arg fixed_frame)"/>
         <param name="config_file" value="$(arg config_file)"/>
     </node>
 </launch>
