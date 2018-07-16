@@ -1,0 +1,5 @@
+sensor_msgs/JointState start
+geometry_msgs/PoseStamped[] eef_traj
+---
+trajectory_msgs/JointTrajectory joint_traj
+bool success

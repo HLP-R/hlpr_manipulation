@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="config_file" default="mico.config"/>
+
+    <node name="hlpr_relaxed_ik_service" pkg="hlpr_relaxed_ik" type="ik_handler.py" output="screen">
+        <param name="config_file" value="$(arg config_file)"/>
+    </node>
+</launch>
