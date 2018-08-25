@@ -10,7 +10,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <moveit/robot_state/conversions.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
