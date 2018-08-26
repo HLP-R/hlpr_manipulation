@@ -25,7 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
     wpi_jaco_msgs
     )
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 catkin_package()
 
@@ -50,9 +50,9 @@ target_link_libraries(hlpr_moveit_wrapper ${catkin_LIBRARIES})
 target_link_libraries(common_actions ${catkin_LIBRARIES})
 target_link_libraries(primitive_actions ${catkin_LIBRARIES})
 
-add_dependencies(hlpr_moveit_wrapper rail_manipulation_msgs_gencpp)
-add_dependencies(common_actions rail_manipulation_msgs_gencpp)
-add_dependencies(primitive_actions rail_manipulation_msgs_gencpp)
+add_dependencies(hlpr_moveit_wrapper rail_manipulation_msgs_generate_messages_cpp)
+add_dependencies(common_actions rail_manipulation_msgs_generate_messages_cpp)
+add_dependencies(primitive_actions rail_manipulation_msgs_generate_messages_cpp)
 
 #############
 ## Install ##
