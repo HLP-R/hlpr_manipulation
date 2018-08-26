@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hlpr_trac_ik)
 
 find_package(catkin REQUIRED COMPONENTS message_generation roscpp std_msgs geometry_msgs trajectory_msgs trac_ik_lib cmake_modules)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS date_time)
 find_package(orocos_kdl REQUIRED)
 
