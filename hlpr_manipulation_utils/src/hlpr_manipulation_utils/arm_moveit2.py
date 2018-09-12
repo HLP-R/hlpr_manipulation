@@ -26,7 +26,7 @@ class ArmMoveIt:
 
     """
 
-    def __init__(self, planning_frame='base_link', default_planner="RRTConnectkConfigDefault"):
+    def __init__(self, planning_frame='base_link', eef_frame='j2s7s300_ee_link', default_planner="RRTConnectkConfigDefault"):
         """ Create an interface to ROS MoveIt with a given frame and planner.
 
         Creates an interface to ROS MoveIt!. Right now this only creates
@@ -42,6 +42,8 @@ class ArmMoveIt:
         ----------
         planning_frame : str, optional
             the frame in which MoveIt! should plan
+        eef_frame : str, optional
+            the end effector frame for pose goals
         default_planner : str, optional
             which planner to use with MoveIt!
         """
@@ -76,6 +78,7 @@ class ArmMoveIt:
 
         # Set the planning pose reference frame
         self.group[0].set_pose_reference_frame(planning_frame)
+        self.group[0].set_end_effector_link(eef_frame)
 
         ## The names of continuous joints. They will always be remapped
         ## into (-pi,pi)
@@ -244,7 +247,7 @@ class ArmMoveIt:
 
         Parameters
         ----------
-        target : geometry_msgs/Pose
+        target : geometry_msgs/Pose or geometry_msgs/PoseStamped
             the desired pose of the end effector
         starting_config : RobotState, optional
             the starting configuration to plan from.  If not set, will 
@@ -260,7 +263,7 @@ class ArmMoveIt:
             the plan for reaching the target position
         """
         self.set_start_state(starting_config)
-        self.set_ee_target(target,group_id)
+        self.set_ee_target(target, group_id)
         return self.get_plan()
 
     def set_start_state(self, joint_config=None, group_id=0):
@@ -324,10 +327,12 @@ class ArmMoveIt:
             for compatibility with future functionality; leave set to 
             default for now.
         """
+        
         try:
             # sanitize possible numpy before sending off to moveit
             if type(target).__module__ == 'numpy':
                 target = target.tolist()
+
             self.group[group_id].set_pose_target(target)
             self.group[group_id].set_planner_id(self.planner)
         except moveit_commander.MoveItCommanderException as e:
