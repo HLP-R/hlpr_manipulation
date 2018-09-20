@@ -111,5 +111,10 @@ class TFFreezeFrame(object):
 if __name__=="__main__":
     rospy.init_node("tf_freeze_frame")
     frames = yaml.load(sys.argv[1])
-    tff = TFFreezeFrame(frames)
+
+    if len(sys.argv) > 2:
+        # we have a base link provided
+        tff = TFFreezeFrame(frames, sys.argv[2])
+    else:
+        tff = TFFreezeFrame(frames)
     rospy.spin()
