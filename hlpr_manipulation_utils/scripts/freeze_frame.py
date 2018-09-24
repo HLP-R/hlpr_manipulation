@@ -33,6 +33,7 @@ import yaml
 import tf
 import sys
 import threading
+from hlpr_manipulation_utils.srv import FreezeFrame, FreezeFrameRequest, FreezeFrameResponse
 
 from std_srvs.srv import Empty, EmptyResponse
 
@@ -60,14 +61,21 @@ class TFFreezeFrame(object):
         self.monitor_thread.start()
         rospy.sleep(2)
         self.publish_thread.start()      
-        self.server = rospy.Service("freeze_frames", Empty, self.handle_srv)
+        self.server = rospy.Service("freeze_frames", FreezeFrame, self.handle_srv)
 
     def handle_srv(self, req):
-        if all(self.frozen.values()):
+        if req.action == FreezeFrameRequest.TOGGLE:
+            if all(self.frozen.values()):
+                self.unfreeze_all()
+            else:
+                self.freeze_all()
+        elif req.action == FreezeFrameRequest.FREEZE:
+            self.freeze_all()
+        elif req.action == FreezeFrameRequest.UNFREEZE:
             self.unfreeze_all()
         else:
-            self.freeze_all()
-        return EmptyResponse()
+            rospy.logerr("unknown freeze frame action {}".format(req.action))
+        return FreezeFrameResponse()
         
     def freeze(self, frames):
         for f in frames:

@@ -1,0 +1,6 @@
+int32 TOGGLE=0
+int32 FREEZE=1
+int32 UNFREEZE=2
+
+int32 action
+---
