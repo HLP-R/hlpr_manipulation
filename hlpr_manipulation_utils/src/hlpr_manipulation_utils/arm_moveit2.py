@@ -61,7 +61,10 @@ class ArmMoveIt:
         # self.pose = geometry_msgs.msg.PoseStamped()
 
         # Check if we're using the 7dof
-        is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+        if 'VECTOR_HAS_KINOVA_7DOF_ARM' in os.environ:
+            is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+        else:
+            is_7dof = True
 
         ## Interface to the robot as a whole.
         self.robot = moveit_commander.RobotCommander()
