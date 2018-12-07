@@ -6,6 +6,9 @@ Currently, the best-supported scripts in this package are ArmMoveIt 2, Gripper, 
 
 ## ArmMoveIt 2
 
+
+There is more complete documentation on the [GitHub Pages Site](https://hlp-r.github.io/hlpr_documentation/).
+
 ArmMoveIt 2 is a wrapper around MoveIt specifically for our Kinova arms. Here is a minimal working example of how to use ArmMoveIt 2 with the Kinova 7-DOF arm:
 
 
