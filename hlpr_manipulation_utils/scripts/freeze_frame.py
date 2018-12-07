@@ -55,6 +55,7 @@ class TFFreezeFrame(object):
         self.listener = tf.TransformListener()
 
 
+        self.increment = 0
         self.monitor_thread = threading.Thread(target=self.monitor_tfs)
         self.publish_thread = threading.Thread(target=self.publish_tfs)
 
@@ -75,6 +76,7 @@ class TFFreezeFrame(object):
             self.unfreeze_all()
         else:
             rospy.logerr("unknown freeze frame action {}".format(req.action))
+        rospy.loginfo("Freezing is: {}".format(self.frozen))
         return FreezeFrameResponse()
         
     def freeze(self, frames):
@@ -100,24 +102,28 @@ class TFFreezeFrame(object):
                 rot = None
                 for inframe in inframes:
                     try:
-                        trans, rot = self.listener.lookupTransform(self.fixed, inframe, rospy.Time())
+                        trans, rot = self.listener.lookupTransform(self.fixed, inframe, rospy.Time.now()-rospy.Duration(0.3))
                     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-                        rospy.logwarn_throttle(1,"FreezeFrame Error: {}".format(e))
+                        rospy.logwarn_throttle(30, "FreezeFrame Error: {}".format(e))
                         continue
                     break
                 self.transforms[outframe]=(trans,rot)
+            rospy.sleep(0.1)
         
     def publish_tfs(self):
         while not rospy.is_shutdown():
+            rospy.loginfo_throttle(30,"Freezing is: {}".format(self.frozen))
             for outframe, inframes in self.frames.items():
                 trans,rot = self.transforms[outframe]
                 if trans is None or rot is None:
-                    rospy.logwarn_throttle(1,"Couldn't find transform for tf {}; won't republish.".format(outframe))
+                    rospy.logwarn_throttle(30,"Couldn't find transform for tf {}; won't republish.".format(outframe))
                 else:
+                    self.increment += 1
                     self.broadcaster.sendTransform(trans, rot, rospy.Time.now(), outframe, self.fixed)
+            rospy.sleep(0.1)
 
 if __name__=="__main__":
-    rospy.init_node("tf_freeze_frame")
+    rospy.init_node("freeze_frame")
     frames = yaml.load(sys.argv[1])
 
     if len(sys.argv) > 2:
