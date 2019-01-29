@@ -98,6 +98,12 @@ class PickPlace(object):
         print("looking up frame name")
         planning_frame = self.arm.group[0].get_pose_reference_frame()
         try:
+            self.listener.waitForTransform(
+                planning_frame,
+                frame_name,
+                rospy.Time(0),
+                rospy.Duration(1.0)
+            )
             (trans,rot) = self.listener.lookupTransform(planning_frame, frame_name, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             print("error looking up transform, cannot complete pick command:")
@@ -109,7 +115,7 @@ class PickPlace(object):
 
         return self.pick(trans)
 
-    def pick_center(self, frame_name):
+    def pick_center(self, frame_name, fixed_height=None):
         assert frame_name, type(frame_name) == str
 
         if self.is_holding and self.require_place:
@@ -120,11 +126,19 @@ class PickPlace(object):
         print("looking up frame name")
         planning_frame = self.arm.group[0].get_pose_reference_frame()
         try:
+            self.listener.waitForTransform(
+                planning_frame,
+                frame_name,
+                rospy.Time(0),
+                rospy.Duration(1.0)
+            )
             (trans,rot) = self.listener.lookupTransform(planning_frame, frame_name, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             print("error looking up transform, cannot complete pick command:")
             print(e)
             return
+        if fixed_height:
+            trans[2] = fixed_height
         return self.pick(trans)
 
     def pick(self, target_position):
@@ -133,9 +147,7 @@ class PickPlace(object):
         target_position = np.array(target_position) + np.array(self.vision_fudge_factor)
 
         # open gripper
-        print("opening gripper")
-        self.gripper.open()
-        rospy.sleep(2.0)
+        self.gripper.open(block=True)
 
         # move over frame
         print("approaching frame")
@@ -158,8 +170,7 @@ class PickPlace(object):
 
         # close gripper
         print("closing gripper")
-        self.gripper.close()
-        rospy.sleep(2.0)
+        self.gripper.close(block=True)
 
         # move up
         print("moving up")
@@ -207,9 +218,7 @@ class PickPlace(object):
         self.arm.move_to_ee_pose(target)
 
         # open gripper
-        print("opening gripper")
-        self.gripper.open()
-        rospy.sleep(2.0)
+        self.gripper.open(block=True)
 
         # move up
         print("moving up")

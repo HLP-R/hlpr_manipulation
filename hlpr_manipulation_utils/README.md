@@ -77,7 +77,7 @@ You can use the class in an interactive command line (as in the video) by runnin
 ### Minimal Example
 
 ```python
-from hlpr_manipulation_utils import PickPlace
+from hlpr_manipulation_utils.pick_place import PickPlace
 
 pick_place = PickPlace()
 pick_place.pick_center("obj_frame")
