@@ -8,6 +8,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
+  moveit_msgs
   roscpp
   rospy
   std_msgs
@@ -47,11 +48,10 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  KTPlanDisplay.msg
+)
 
 # Generate services in the 'srv' folder
 add_service_files(
@@ -69,6 +69,7 @@ add_service_files(
 # Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
+  moveit_msgs
 )
 
 ################################################
@@ -151,10 +152,6 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-#   bin/wpiJaco2vectorVelMap
-   bin/arm_upper_tuck
-   bin/arm_lower_tuck
-   bin/arm_untuck
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

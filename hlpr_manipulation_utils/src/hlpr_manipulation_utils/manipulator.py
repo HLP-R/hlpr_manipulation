@@ -500,6 +500,8 @@ class Arm:
         self._untuck_with_network()
 
   def _init_tuck_poses(self):
+    rospy.logerr("Look out! Loading tuck poses that are not validated on "
+                 "current versions of Poli")
     self.mid_wp = [-1.57, 3.14, 1.05, -1.57, 1.05, 1.57]
 
     lt_wp0 = [-1.65, 3.68, 1.12, -2.13, 1.48, 2.10]
