@@ -135,7 +135,7 @@ class Arm:
 
     # Check if we're using the 7dof
     if robot_name == 'poli2':
-      is_7dof = true
+      is_7dof = 'true'
     else:
       is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM'] 
 
