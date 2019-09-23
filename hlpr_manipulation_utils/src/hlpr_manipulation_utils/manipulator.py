@@ -172,7 +172,7 @@ class Arm:
       self.arm_joint_names = [  self._arm_prefix + "_joint_1",   self._arm_prefix + "_joint_2",   self._arm_prefix + "_joint_3", self._arm_prefix + "_joint_4",   self._arm_prefix + "_joint_5",   self._arm_prefix + "_joint_6", self._arm_prefix + "_joint_7"]
       joint_state_topic = "/joint_states"
       # Load the trajectory client
-      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_trajectory_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
+      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/hlpr_jaco_trajectory_action_server/trajectory', FollowJointTrajectoryAction)
 
     self.joint_states = [0 for i in range(0,len( self.arm_joint_names))]
 
