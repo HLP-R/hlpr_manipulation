@@ -13,7 +13,7 @@ import actionlib
 import time
 import os
 
-if 'ROBOT_NAME' in os.environ and os.environ['ROBOT_NAME'] == 'poli2':
+if os.environ.get("ROBOT_NAME") == 'poli2':
   from robotiq_85_msgs.msg import GripperCmd, GripperStat
 else:
   from vector_msgs.msg import JacoCartesianVelocityCmd, LinearActuatorCmd, GripperCmd, GripperStat
@@ -28,12 +28,7 @@ class Manipulator:
 class Gripper:
   def __init__(self, prefix='right'):
 
-    if 'ROBOT_NAME' in os.environ:
-      robot_name = os.environ['ROBOT_NAME']
-    else:
-      robot_name = None
-
-    if robot_name == 'poli2':
+    if os.environ.get("ROBOT_NAME") == 'poli2':
       self.pub_grp  = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size = 10)
       rospy.Subscriber('gripper/stat', GripperStat, self.st_cb)
     else:
@@ -142,37 +137,36 @@ class Arm:
 
     self._arm_prefix = arm_prefix
 
-    if 'ROBOT_NAME' in os.environ:
-      robot_name = os.environ['ROBOT_NAME']
-    else:
-      robot_name = None
+    robot_name = os.environ.get("ROBOT_NAME")
 
     # Check if we're using the 7dof
     if robot_name == 'poli2':
-      is_7dof = true
+      is_7dof = True
     else:
-      is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+      if 'VECTOR_HAS_KINOVA_7DOF_ARM' in os.environ:
+        is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']
+      else:
+        print "Can't determine whether or not the kinova is a 7DOF arm or not."
+        print "You need to set the VECTOR_HAS_KINOVA_7DOF_ARM environment var."
+        print "for now, assuming that the arm IS 7DOF'
+        is_7dof = True
 
-    if is_7dof == 'true':
+    if is_7dof:
         dof = 7
+        self.arm_joint_names = [  self._arm_prefix + "_joint_1",   self._arm_prefix + "_joint_2",   self._arm_prefix + "_joint_3", self._arm_prefix + "_joint_4",   self._arm_prefix + "_joint_5",   self._arm_prefix + "_joint_6", self._arm_prefix + "_joint_7"]
+        joint_state_topic = "/joint_states"
+        # Load the trajectory client
+        self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/hlpr_jaco_trajectory_action_server/trajectory', FollowJointTrajectoryAction)
     else:
         dof = 6
+        self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
+        self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
+        self.arm_joint_names = [  self._arm_prefix + "_shoulder_pan_joint",   self._arm_prefix + "_shoulder_lift_joint",   self._arm_prefix + "_elbow_joint",
+                                self._arm_prefix + "_wrist_1_joint",   self._arm_prefix + "_wrist_2_joint",   self._arm_prefix + "_wrist_3_joint"]
+        joint_state_topic = "/vector/right_arm/joint_states"
 
-    if dof is 6:
-      self.pub_jaco_ang  = rospy.Publisher('/jaco_arm/angular_cmd', AngularCommand, queue_size = 10, latch=True)
-      self.pub_jaco_cart = rospy.Publisher('/jaco_arm/cartesian_cmd', CartesianCommand, queue_size = 10, latch=True)
-      self.arm_joint_names = [  self._arm_prefix + "_shoulder_pan_joint",   self._arm_prefix + "_shoulder_lift_joint",   self._arm_prefix + "_elbow_joint",
-                              self._arm_prefix + "_wrist_1_joint",   self._arm_prefix + "_wrist_2_joint",   self._arm_prefix + "_wrist_3_joint"]
-      joint_state_topic = "/vector/right_arm/joint_states"
-
-      # Load the trajectory client
-      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
-
-    if dof is 7:
-      self.arm_joint_names = [  self._arm_prefix + "_joint_1",   self._arm_prefix + "_joint_2",   self._arm_prefix + "_joint_3", self._arm_prefix + "_joint_4",   self._arm_prefix + "_joint_5",   self._arm_prefix + "_joint_6", self._arm_prefix + "_joint_7"]
-      joint_state_topic = "/joint_states"
-      # Load the trajectory client
-      self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_trajectory_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
+        # Load the trajectory client
+        self.smooth_joint_trajectory_client = actionlib.SimpleActionClient('/jaco_arm/joint_velocity_controller/trajectory', FollowJointTrajectoryAction)
 
     self.joint_states = [0 for i in range(0,len( self.arm_joint_names))]
 
@@ -210,7 +204,6 @@ class Arm:
     self.arm_planner = ArmMoveIt()
 
   def _get_arm_joint_values(self, msg):
-
     # Cycle through the active joints and populate
     # a dictionary for those values
     joint_values = dict()

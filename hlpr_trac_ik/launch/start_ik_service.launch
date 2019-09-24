@@ -3,8 +3,8 @@
 
     <!-- Setup parameters for the IK service -->
     <arg name="base_chain" default="linear_actuator_link"/>
-    <arg name="end_chain" default="right_ee_link"/>
-    <arg name="timeout_in_sec" default="0.005"/>
+    <arg name="end_chain" default="j2s7s300_ee_link"/>
+    <arg name="timeout_in_sec" default="0.5"/>
     <arg name="error" default="1e-5"/>
     <arg name="distance_flag" default="true"/>
    
