@@ -5,8 +5,12 @@
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <string>
 #include <Eigen/Core>
+#include <urdf/model.h>
 
 TRAC_IK::TRAC_IK *solver;
+KDL::Chain chain;
+KDL::ChainFkSolverPos_recursive *fk_solver;
+urdf::Model *robot_model;
 
 bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
          hlpr_trac_ik::IKHandler::Response &res)
@@ -50,7 +54,12 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
     float max = std::numeric_limits<float>::max();
     KDL::Vector rotTol(req.tolerance[3],req.tolerance[4],req.tolerance[5]);
     KDL::Twist tol(posTol, rotTol);
-    int status = solver->CartToJnt(prev, goalPose, prev, tol);
+
+    int status = solver->CartToJnt(prev, goalPose, prev);
+    //int status = solver->CartToJnt(prev, goalPose, prev, tol);
+    KDL::Frame fkPose;
+    fk_solver->JntToCart(prev,fkPose);
+
     if(status < 0){
       ROS_WARN("HLP-R IK failed");
       succeed = false;
@@ -68,6 +77,16 @@ bool getPose(hlpr_trac_ik::IKHandler::Request  &req,
     res.success = succeed;
     ROS_INFO("sending back response: %s", poseStr.c_str());
   }
+
+  // Add joint names to response message
+  std::vector<KDL::Segment> chain_segs = chain.segments;
+  boost::shared_ptr<const urdf::Joint> joint;
+  for(unsigned int i = 0; i < chain_segs.size(); ++i) {
+    joint = robot_model->getJoint(chain_segs[i].getJoint().getName());
+    if (joint->type != urdf::Joint::UNKNOWN && joint->type != urdf::Joint::FIXED)
+      res.joint_names.push_back(chain_segs[i].getJoint().getName());
+  }
+ 
   return true;
 }
 
@@ -93,11 +112,41 @@ int main(int argc, char **argv)
   nh.param("distance_flag", _dist_flag, false);
 
   // Create track IK solver
+  
+  //solver = new TRAC_IK::TRAC_IK("linear_actuator_link", "j2s7s300_ee_link", "/robot_description", 0.005, 1e-5, TRAC_IK::Distance);
+
   if (_dist_flag){
     solver = new TRAC_IK::TRAC_IK(_base_chain, _end_chain, "/robot_description", _timeout_in_secs, _error, TRAC_IK::Distance);
   } else {
     solver = new TRAC_IK::TRAC_IK(_base_chain, _end_chain, "/robot_description", _timeout_in_secs, _error, TRAC_IK::Speed);
   }
+
+  bool valid;
+  valid = solver->getKDLChain(chain);
+  if (!valid) {
+    ROS_ERROR("There was no valid KDL chain found");
+    return false;
+  }
+
+  fk_solver = new KDL::ChainFkSolverPos_recursive(chain);
+
+  robot_model = new urdf::Model();
+  std::string xml_string;
+
+  std::string urdf_xml,full_urdf_xml;
+  std::string urdf_param("/robot_description");
+  nh.param("urdf_xml",urdf_xml,urdf_param);
+  nh.searchParam(urdf_xml,full_urdf_xml);
+  ROS_DEBUG_NAMED("trac_ik","Reading xml file from parameter server");
+  if (!nh.getParam(full_urdf_xml, xml_string))
+    {
+      ROS_FATAL_NAMED("trac_ik","Could not load the xml from parameter server: %s", urdf_xml.c_str());
+      return false;
+    }
+
+  nh.param(full_urdf_xml,xml_string,std::string());
+  robot_model->initString(xml_string);
+
 
   // Create the service call
   ros::ServiceServer service = n.advertiseService("hlpr_trac_ik", getPose);
