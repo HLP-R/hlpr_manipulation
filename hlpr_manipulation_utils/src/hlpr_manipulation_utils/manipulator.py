@@ -148,7 +148,7 @@ class Arm:
       else:
         print "Can't determine whether or not the kinova is a 7DOF arm or not."
         print "You need to set the VECTOR_HAS_KINOVA_7DOF_ARM environment var."
-        print "for now, assuming that the arm IS 7DOF'
+        print "for now, assuming that the arm IS 7DOF"
         is_7dof = True
 
     if is_7dof:
