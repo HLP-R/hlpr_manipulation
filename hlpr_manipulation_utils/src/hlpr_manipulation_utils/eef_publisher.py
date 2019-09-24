@@ -33,6 +33,7 @@
 import rospy
 import tf 
 import time
+import os
 from geometry_msgs.msg import Pose, Point, Quaternion
 from sensor_msgs.msg import JointState
 
@@ -42,7 +43,10 @@ def eef_pose_pub():
   listener = tf.TransformListener()
   pub = rospy.Publisher('eef_pose', Pose, queue_size=10)
 
-  DEFAULT_EEF_LINK = '/right_ee_link'
+  if os.environ.get("ROBOT_NAME") == "poli2":
+    DEFAULT_EEF_LINK = '/j2s7s300_ee_link'
+  else:
+    DEFAULT_EEF_LINK = '/right_ee_link'
   DEFAULT_BASE_LINK = '/base_link'
   DEFAULT_RATE = 100
 
