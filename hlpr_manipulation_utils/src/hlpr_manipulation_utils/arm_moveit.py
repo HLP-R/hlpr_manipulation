@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+########################################################################################
+########################################################################################
+# THIS FILE IS DEPRECATED, USE arm_moveit2.py INSTEAD
+########################################################################################
+########################################################################################
+
 import sys
 import os
 import rospy
@@ -11,6 +17,10 @@ import std_msgs.msg
 import wpi_jaco_msgs.msg
 import wpi_jaco_msgs.srv
 from math import pi, floor, ceil, fabs
+
+print("*"*80)
+print("THIS FILE IS DEPRECATED, USE arm_moveit2.py INSTEAD")
+print("*"*80)
 
 class ArmMoveIt:
 
@@ -26,14 +36,9 @@ class ArmMoveIt:
     else:
       rospy.loginfo("MoveIt detected: arm planner loading")
 
-    if 'ROBOT_NAME' in os.environ:
-      robot_name = os.environ['ROBOT_NAME']
-    else:
-      robot_name = None
-
     # Check if we're using the 7dof
-    if robot_name == 'poli2':
-      is_7dof = true
+    if os.environ.get("ROBOT_NAME") == 'poli2':
+      is_7dof = True
     else:
       is_7dof = os.environ['VECTOR_HAS_KINOVA_7DOF_ARM']  
 
