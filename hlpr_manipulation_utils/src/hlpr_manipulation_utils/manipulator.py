@@ -81,12 +81,12 @@ class Gripper:
   def get_applied_current(self):
     return self.gripper_stat.current
 
-  def set_pos(self, position, block=False, speed=0, force=0):
+  def set_pos(self, position, block=True, speed=0, force=0):
     position = max(min(position, 1.0), 0.0)
     speed = max(min(speed, 255), 0)
     force = max(min(force, 255), 0)
     if not block:
-      rospy.logwarn('Moving the gripper asynchronously. This can be dangerous. Pass block=True' \
+      rospy.logwarn('Moving the gripper asynchronously. This can be dangerous. Pass block=True ' \
                     'to make this function wait until the gripper is done moving.')
     self.cmd.position = position
     self.cmd.speed = speed
@@ -99,10 +99,10 @@ class Gripper:
       #                 returned by the Robotiq to determine when to return.
       rospy.sleep(3 - (speed / 255))
 
-  def open(self, block=False, speed=255, force=0):
+  def open(self, block=True, speed=255, force=0):
     self.set_pos(1, block, speed, force)
 
-  def close(self, block=False, speed=255, force=0):
+  def close(self, block=True, speed=255, force=0):
     self.set_pos(0, block, speed, force)
 
 class LinearActuator:
