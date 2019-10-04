@@ -15,15 +15,20 @@
 
 #define NUM_JACO_JOINTS 7
 
-#define LARGE_ACTUATOR_VELOCITY 0.628 //maximum velocity of large actuator (joints 1-4) (rad/s)
-#define SMALL_ACTUATOR_VELOCITY 0.838 //maximum velocity of small actuator (joints 5-7) (rad/s)
+#define LARGE_ACTUATOR_MAX_VELOCITY 0.628319 //maximum velocity of large actuator (joints 1-4) (rad/s)
+#define SMALL_ACTUATOR_MAX_VELOCITY 0.837758 //maximum velocity of small actuator (joints 5-7) (rad/s)
+
+#define BUFFER 0.0
+#define LARGE_ACTUATOR_VELOCITY_LIMIT LARGE_ACTUATOR_MAX_VELOCITY-BUFFER //maximum velocity of large actuator (joints 1-4) (rad/s)
+#define SMALL_ACTUATOR_VELOCITY_LIMIT SMALL_ACTUATOR_MAX_VELOCITY-BUFFER //maximum velocity of small actuator (joints 5-7) (rad/s)
 
 #define DEG_TO_RAD (M_PI/180)
 #define RAD_TO_DEG (180/M_PI)
 
 //gains for trajectory follower
-#define KP 225.0
-#define KV 10.0
+#define KP 100
+#define KV 0
+#define KI 0
 #define ERROR_THRESHOLD .001 //threshold in radians for error at each joint to consider motion a success
 
 class JacoTrajectoryController
@@ -45,6 +50,8 @@ public:
 
   void executeSmoothTrajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal);
 
+  bool jointVelocityCheck(int numPoints, ecl::Array<double> &timePoints, std::vector<ecl::Array<double>> const & jointPoints);
+  void stopArm();
 private:
   ros::NodeHandle n;
   ros::NodeHandle pnh;

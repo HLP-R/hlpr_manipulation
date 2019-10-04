@@ -8,6 +8,8 @@ using namespace std;
 JacoTrajectoryController::JacoTrajectoryController() : pnh("~"),
   smoothTrajectoryServer(pnh, "trajectory", boost::bind(&JacoTrajectoryController::executeSmoothTrajectory, this, _1), false)
 {
+  ROS_INFO("Starting HLP-R Custom Jaco Joint Trajectory Action Server");
+
   pnh.param("max_curvature", maxCurvature, 100.0);
   pnh.param("sim", sim_flag_, false);
 
@@ -166,6 +168,106 @@ static inline double nearest_equivalent(double desired, double current)
   return highVal;
 }
 
+bool JacoTrajectoryController::jointVelocityCheck(const int numPoints, ecl::Array<double> &timePoints, std::vector<ecl::Array<double>> const &jointPoints)
+{
+  // Gather timing corrections for trajectory segments that violate max velocity
+  float correctedTime[numPoints] = {};
+  for (unsigned int i = 1; i < numPoints; i++)
+  {
+    // ROS_INFO_STREAM("time point " << i);
+    float maxTime = 0.0;
+    float vel = 0.0;
+
+    float plannedTime = timePoints[i] - timePoints[i - 1];
+    bool validTime = plannedTime > 0;
+
+    for (unsigned int j = 0; j < NUM_JACO_JOINTS; j++)
+    {
+      float time = fabs(jointPoints[j][i] - jointPoints[j][i - 1]);
+      if (plannedTime > 0)
+        vel = fabs(jointPoints[j][i] - jointPoints[j][i - 1]) / plannedTime;
+
+      if (j <= 3)
+      {
+        time /= LARGE_ACTUATOR_VELOCITY_LIMIT;
+        if (plannedTime > 0 && vel > LARGE_ACTUATOR_VELOCITY_LIMIT)
+          validTime = false;
+      }
+      else
+      {
+        time /= SMALL_ACTUATOR_VELOCITY_LIMIT;
+        if (plannedTime > 0 && vel > SMALL_ACTUATOR_VELOCITY_LIMIT)
+          validTime = false;
+      }
+      // ROS_INFO_STREAM("joint " << j << ", planned time = " << plannedTime << ", velocity = " << vel << ", valid=" << validTime);
+
+      if (time > maxTime)
+        maxTime = time;
+    }
+
+    if (!validTime)
+      correctedTime[i] = maxTime;
+  }
+
+  // Apply timing corrections
+  for (unsigned int i = 1; i < numPoints; i++)
+  {
+    correctedTime[i] += correctedTime[i - 1];
+    timePoints[i] += correctedTime[i];
+  }
+
+  bool jointVelocitiesCorrected = (correctedTime[numPoints - 1] > 0);
+
+      // Print warning if time corrections were applied
+      if (jointVelocitiesCorrected)
+  {
+    ROS_WARN("Timing of joint trajectory violates Kinova controller max velocities");
+    ROS_WARN("This should not occur under normal circumstances.");
+    ROS_WARN("Check your MoveIt joint velocity limits (likely in joint_limits.yaml).");
+    ROS_WARN_STREAM("The trajectory will be executed using re-calculated timings based on the " <<
+             "actual joint velocity limits. This could cause tracking errors and/or collisions.");
+
+    // if we are going to use recomputed time, the trajectory will probably take longer
+    // than it was originally planned for. MoveIt has a feature, "execution duration
+    // monitoring", where it will automatically end a trajectory if it runs for longer
+    // than it was planned to.
+
+    // Normally, execution duration monitoring is fine. But in this case, it could
+    // cause the now-lengthened trajectory to be stopped (preempted) before it's
+    // completed.
+
+    // Here, we check to see if execution duration monitoring is turned on. If it is,
+    // we warn the user of that as well.
+    if (ros::service::exists("/move_group/trajectory_execution/set_parameters", false))
+    {
+      dynamic_reconfigure::ReconfigureRequest req;
+      dynamic_reconfigure::ReconfigureResponse resp;
+
+      ros::service::call("/move_group/trajectory_execution/set_parameters", req, resp);
+
+      for (auto const &it : resp.config.bools)
+        if (it.name == "execution_duration_monitoring" && it.value)
+          ROS_WARN("Warning: Execution duration monitoring turned on. This may cause trajectory to be preempted before completion.");
+    }
+  }
+
+  return jointVelocitiesCorrected;
+}
+
+void JacoTrajectoryController::stopArm() {
+
+  kinova_msgs::JointVelocity trajectoryPoint;
+  trajectoryPoint.joint1 = 0.0;
+  trajectoryPoint.joint2 = 0.0;
+  trajectoryPoint.joint3 = 0.0;
+  trajectoryPoint.joint4 = 0.0;
+  trajectoryPoint.joint5 = 0.0;
+  trajectoryPoint.joint6 = 0.0;
+  trajectoryPoint.joint7 = 0.0;
+
+  this->angularCmdPublisher.publish(trajectoryPoint);
+}
+
 void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal)
 {
   int numPoints = goal->trajectory.points.size();
@@ -201,66 +303,7 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
         jointPoints[j][i] = jointStates.position[j];
   }
 
-  // Gather timing corrections for trajectory segments that violate max velocity
-  float correctedTime[numPoints] = { };
-  for (unsigned int i = 1; i < numPoints; i++)
-  {
-    float maxTime = 0.0;
-    float vel = 0.0;
-
-    float plannedTime = timePoints[i] - timePoints[i-1];
-    bool validTime = plannedTime > 0;
-
-    for (unsigned int j = 0; j < NUM_JACO_JOINTS; j++)
-    {
-      float time = fabs(jointPoints[j][i] - jointPoints[j][i-1]);
-      if (plannedTime > 0)
-        vel = fabs(jointPoints[j][i] - jointPoints[j][i-1]) / plannedTime;
-
-      if (j <= 3)
-      {
-        time /= 0.9*LARGE_ACTUATOR_VELOCITY;
-        if (plannedTime > 0 && vel > 0.9*LARGE_ACTUATOR_VELOCITY)
-          validTime = false;
-      }
-      else
-      {
-        time /= 0.9*SMALL_ACTUATOR_VELOCITY;
-        if (plannedTime > 0 && vel > 0.9*SMALL_ACTUATOR_VELOCITY)
-          validTime = false;
-      }
-
-      if (time > maxTime)
-        maxTime = time;
-    }
-
-    if (!validTime)
-      correctedTime[i] = maxTime;
-  }
-
-  // Apply timing corrections
-  for (unsigned int i = 1; i < numPoints; i++)
-  {
-    correctedTime[i] += correctedTime[i-1];
-    timePoints[i] += correctedTime[i];
-  }
-
-  // Print warning if time corrections applied
-  if (correctedTime[numPoints-1] > 0)
-  {
-    ROS_WARN("Warning: Timing of joint trajectory violates max velocities, using computed time"); 
-    if (ros::service::exists("/move_group/trajectory_execution/set_parameters", false))
-    {
-      dynamic_reconfigure::ReconfigureRequest req;
-      dynamic_reconfigure::ReconfigureResponse resp;
-
-      ros::service::call("/move_group/trajectory_execution/set_parameters", req, resp);
-
-      for (auto const& it : resp.config.bools)
-        if (it.name == "execution_duration_monitoring" && it.value)
-          ROS_WARN("Warning: Execution duration monitoring turned on. This may cause trajectory to be premempted before completion.");
-    }
-  }
+  bool jointVelocitiesCorrected = this->jointVelocityCheck(numPoints, timePoints, jointPoints);
 
   // Spline the given points to smooth the trajectory
   vector<ecl::SmoothLinearSpline> splines;
@@ -280,7 +323,6 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
   }
   catch (...) // This catches ALL exceptions
   {
-    
     cubic_flag_= true;
     ROS_WARN("WARNING: Performing cubic spline rather than smooth linear because of crash");
     for (unsigned int i = 0; i < NUM_JACO_JOINTS; i++)
@@ -289,7 +331,7 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
       cubic_splines.at(i) = tempSpline;
     }
   }
-  
+
   //control loop
   bool trajectoryComplete = false;
   double startTime = ros::Time::now().toSec();
@@ -297,6 +339,7 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
   float error[NUM_JACO_JOINTS];
   float totalError;
   float prevError[NUM_JACO_JOINTS] = {0};
+  float integratedError[NUM_JACO_JOINTS] = {0};
   float currentPoint;
   double current_joint_pos[NUM_JACO_JOINTS];
   kinova_msgs::JointVelocity trajectoryPoint;
@@ -352,7 +395,7 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
     }
 
     // Tell the server we finished the trajectory
-    ROS_INFO("Trajectory Control Complete.");
+    ROS_INFO("Simulated trajectory execution complete.");
     control_msgs::FollowJointTrajectoryResult result;
     result.error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
     smoothTrajectoryServer.setSucceeded(result);
@@ -367,21 +410,9 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
       //check for preempt requests from clients
       if (smoothTrajectoryServer.isPreemptRequested())
       {
-        //stop gripper control
-        trajectoryPoint.joint1 = 0.0;
-        trajectoryPoint.joint2 = 0.0;
-        trajectoryPoint.joint3 = 0.0;
-        trajectoryPoint.joint4 = 0.0;
-        trajectoryPoint.joint5 = 0.0;
-        trajectoryPoint.joint6 = 0.0;
-        trajectoryPoint.joint7 = 0.0;
-
-        angularCmdPublisher.publish(trajectoryPoint);
-
-        //preempt action server
+        this->stopArm();
         smoothTrajectoryServer.setPreempted();
         ROS_INFO("Smooth trajectory server preempted by client");
-
         return;
       }
 
@@ -391,12 +422,6 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
       {
         //use final trajectory point as the goal to calculate error until the error
         //is small enough to be considered successful
-        /*
-        {
-          boost::recursive_mutex::scoped_lock lock(api_mutex);
-          GetAngularPosition(position_data);
-        }
-        */
 
         if (!reachedFinalPoint)
         {
@@ -433,30 +458,16 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
 
         if (!jointError || ros::Time::now() - finalPointTime >= ros::Duration(3.0))
         {
-          cout << "Errors: " << error[0] << ", " << error[1] << ", " << error[2] << ", " << error[3] << ", " << error[4] << ", " << error[5] << endl;
-          //stop arm
-          trajectoryPoint.joint1 = 0.0;
-          trajectoryPoint.joint2 = 0.0;
-          trajectoryPoint.joint3 = 0.0;
-          trajectoryPoint.joint4 = 0.0;
-          trajectoryPoint.joint5 = 0.0;
-          trajectoryPoint.joint6 = 0.0;
-          trajectoryPoint.joint7 = 0.0;
-          angularCmdPublisher.publish(trajectoryPoint);
+          this->stopArm();
           trajectoryComplete = true;
           ROS_INFO("Trajectory complete!");
+          ROS_INFO_STREAM("Steady-State Error: " << error[0] << ", " << error[1] << ", " << error[2] << ", " << error[3] << ", " << error[4] << ", " << error[5]);
           break;
         }
       }
       else
       {
         //calculate error
-        /*
-        {
-          boost::recursive_mutex::scoped_lock lock(api_mutex);
-          GetAngularPosition(position_data);
-        }
-        */
         for (unsigned int i = 0; i < NUM_JACO_JOINTS; i++)
         {
           current_joint_pos[i] = jointStates.position[i];
@@ -479,18 +490,21 @@ void JacoTrajectoryController::executeSmoothTrajectory(const control_msgs::Follo
         }
       }
 
+      // integrate the error
+      for (int i = 0; i < NUM_JACO_JOINTS; ++i)
+      {
+        integratedError[i] += error[i];
+      }
+
       //calculate control input
       //populate the velocity command
-      trajectoryPoint.joint1 = (KP * error[0] + KV * (error[0] - prevError[0]) * RAD_TO_DEG);
-      trajectoryPoint.joint2 = (KP * error[1] + KV * (error[1] - prevError[1]) * RAD_TO_DEG);
-      trajectoryPoint.joint3 = (KP * error[2] + KV * (error[2] - prevError[2]) * RAD_TO_DEG);
-      trajectoryPoint.joint4 = (KP * error[3] + KV * (error[3] - prevError[3]) * RAD_TO_DEG);
-      trajectoryPoint.joint5 = (KP * error[4] + KV * (error[4] - prevError[4]) * RAD_TO_DEG);
-      trajectoryPoint.joint6 = (KP * error[5] + KV * (error[5] - prevError[5]) * RAD_TO_DEG);
-      trajectoryPoint.joint7 = (KP * error[6] + KV * (error[6] - prevError[6]) * RAD_TO_DEG);
-
-      //for debugging:
-      // cout << "Errors: " << error[0] << ", " << error[1] << ", " << error[2] << ", " << error[3] << ", " << error[4] << ", " << error[5] << endl;
+      trajectoryPoint.joint1 = (KP * error[0] + KV * (error[0] - prevError[0] + KI * (integratedError[0])) * RAD_TO_DEG);
+      trajectoryPoint.joint2 = (KP * error[1] + KV * (error[1] - prevError[1] + KI * (integratedError[1])) * RAD_TO_DEG);
+      trajectoryPoint.joint3 = (KP * error[2] + KV * (error[2] - prevError[2] + KI * (integratedError[2])) * RAD_TO_DEG);
+      trajectoryPoint.joint4 = (KP * error[3] + KV * (error[3] - prevError[3] + KI * (integratedError[3])) * RAD_TO_DEG);
+      trajectoryPoint.joint5 = (KP * error[4] + KV * (error[4] - prevError[4] + KI * (integratedError[4])) * RAD_TO_DEG);
+      trajectoryPoint.joint6 = (KP * error[5] + KV * (error[5] - prevError[5] + KI * (integratedError[5])) * RAD_TO_DEG);
+      trajectoryPoint.joint7 = (KP * error[6] + KV * (error[6] - prevError[6] + KI * (integratedError[6])) * RAD_TO_DEG);
 
       //send the velocity command
       angularCmdPublisher.publish(trajectoryPoint);
