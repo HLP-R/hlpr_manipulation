@@ -26,14 +26,20 @@ class Manipulator:
     self.linear_actuator = LinearActuator()
 
 class Gripper:
-  def __init__(self, prefix='right'):
+  def __init__(self, prefix=None):
 
     if os.environ.get("ROBOT_NAME") == 'poli2':
-      self.pub_grp  = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size = 10)
-      rospy.Subscriber('gripper/stat', GripperStat, self.st_cb)
+      if prefix is None:
+        topic_prefix = "/gripper/"
+      else:
+        topic_prefix = "/" + prefix + "_gripper_driver/"
     else:
-      self.pub_grp  = rospy.Publisher('/vector/'+prefix+'_gripper/cmd', GripperCmd, queue_size = 10)
-      rospy.Subscriber('/vector/'+prefix+'_gripper/stat', GripperStat, self.st_cb)
+      if prefix is None:
+        prefix = 'right'
+      topic_prefix = '/vector/' + prefix + '_gripper/'
+
+    self.pub_grp  = rospy.Publisher(topic_prefix + 'cmd', GripperCmd, queue_size = 10)
+    rospy.Subscriber(topic_prefix + 'stat', GripperStat, self.st_cb)
 
     # Wait for a connection to the gripper.
     while self.pub_grp.get_num_connections() < 1:
@@ -148,7 +154,7 @@ class Arm:
       else:
         print "Can't determine whether or not the kinova is a 7DOF arm or not."
         print "You need to set the VECTOR_HAS_KINOVA_7DOF_ARM environment var."
-        print "for now, assuming that the arm IS 7DOF'
+        print "for now, assuming that the arm IS 7DOF"
         is_7dof = True
 
     if is_7dof:

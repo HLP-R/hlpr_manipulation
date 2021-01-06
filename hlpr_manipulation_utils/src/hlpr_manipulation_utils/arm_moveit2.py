@@ -26,7 +26,7 @@ class ArmMoveIt:
 
     """
 
-    def __init__(self, planning_frame='base_link', eef_frame='j2s7s300_ee_link', default_planner="RRTConnectkConfigDefault"):
+    def __init__(self, planning_frame='base_link', eef_frame='j2s7s300_ee_link', default_planner="RRTConnectkConfigDefault", planning_group="arm", arm_prefix="j2s7s300_"):
         """ Create an interface to ROS MoveIt with a given frame and planner.
 
         Creates an interface to ROS MoveIt!. Right now this only creates
@@ -74,7 +74,7 @@ class ArmMoveIt:
 
         ## Array of interfaces to single groups of joints.  
         ## At the moment, only a single arm interface is instantiated
-        self.group = [moveit_commander.MoveGroupCommander("arm")]
+        self.group = [moveit_commander.MoveGroupCommander(planning_group)]
 
         ## The name of the planner to use
         self.planner = default_planner
@@ -89,6 +89,8 @@ class ArmMoveIt:
             self.continuous_joints = ['joint_1','joint_3','joint_5','joint_7']
         else:
             self.continuous_joints = ['shoulder_pan_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint']
+        # prepend prefix
+        self.continuous_joints = [arm_prefix + jn for jn in self.continuous_joints]
 
     def get_IK(self, new_pose, root = None, group_id=0):
         """ Find the corresponding joint angles for an end effector pose
@@ -841,20 +843,22 @@ class ArmMoveIt:
         # Helper function to convert a dictionary of joint values
         if isinstance(joints, dict):
             simplified_joints = dict()
-            for joint in joints:
+            for joint_name, joint_val in joints:
                 # Pull out the name of the joint
-                joint_name = '_'.join(joint.split('_')[1::])
+                # joint_name = '_'.join(joint.split('_')[1::])
                 if joint_name in self.continuous_joints:
-                    simplified_joints[joint] = self._simplify_angle(joints[joint])
+                    simplified_joints[joint] = self._simplify_angle(joint_val)
                 else:
-                    simplified_joints[joint] = joints[joint]
+                    simplified_joints[joint] = joint_val
         elif isinstance(joints, list):
             simplified_joints = []
             #separate the joint name from the group name
-            joint_order = map(lambda s: "_".join(s.split("_")[1::]), 
-                              self.group[group_id].get_active_joints())
-            
-            continuous_joint_indices = [joint_order.index(j) for j in self.continuous_joints]
+            # joint_order = map(lambda s: "_".join(s.split("_")[1::]), 
+            #                   self.group[group_id].get_active_joints())
+            # continuous_joint_indices = []
+            # for j in self.group[group_id].get_active_joints():
+            #     if 
+            continuous_joint_indices = [self.group[group_id].get_active_joints().index(j) for j in self.continuous_joints]
 
             for i in xrange(len(joints)):
                 a = joints[i]

@@ -76,6 +76,7 @@ private:
   double maxCurvature;
   bool   sim_flag_;
   bool   cubic_flag_;
+  std::string prefix_;
 
   sensor_msgs::JointState jointStates;
 

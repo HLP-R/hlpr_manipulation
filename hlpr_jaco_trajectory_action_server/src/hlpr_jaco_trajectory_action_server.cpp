@@ -12,15 +12,16 @@ JacoTrajectoryController::JacoTrajectoryController() : pnh("~"),
 
   pnh.param("max_curvature", maxCurvature, 100.0);
   pnh.param("sim", sim_flag_, false);
+  pnh.param<std::string>("prefix", prefix_, "j2s7s300");
 
   jointNames.clear();
-  jointNames.push_back("j2s7s300_joint_1");
-  jointNames.push_back("j2s7s300_joint_2");
-  jointNames.push_back("j2s7s300_joint_3");
-  jointNames.push_back("j2s7s300_joint_4");
-  jointNames.push_back("j2s7s300_joint_5");
-  jointNames.push_back("j2s7s300_joint_6");
-  jointNames.push_back("j2s7s300_joint_7");
+  jointNames.push_back(prefix_ + "_joint_1");
+  jointNames.push_back(prefix_ + "_joint_2");
+  jointNames.push_back(prefix_ + "_joint_3");
+  jointNames.push_back(prefix_ + "_joint_4");
+  jointNames.push_back(prefix_ + "_joint_5");
+  jointNames.push_back(prefix_ + "_joint_6");
+  jointNames.push_back(prefix_ + "_joint_7");
 
   // Setting up simulation vs. real robot
   if(!sim_flag_)
@@ -28,7 +29,7 @@ JacoTrajectoryController::JacoTrajectoryController() : pnh("~"),
     ROS_INFO("Using real robot arm.");
 
     // Connect to the low-level angular driver from kinova-ros
-    angularCmdPublisher = n.advertise<kinova_msgs::JointVelocity>("j2s7s300_driver/in/joint_velocity", 1);
+    angularCmdPublisher = n.advertise<kinova_msgs::JointVelocity>(prefix_ + "_driver/in/joint_velocity", 1);
   }
   else
   {
@@ -36,16 +37,16 @@ JacoTrajectoryController::JacoTrajectoryController() : pnh("~"),
 
     // Setup a fake gravity comp service (torque control)
     start_gravity_comp_ = n.advertiseService(
-                "j2s7s300_driver/in/start_gravity_comp", &JacoTrajectoryController::startGravityCompService, this);
+                prefix_ + "_driver/in/start_gravity_comp", &JacoTrajectoryController::startGravityCompService, this);
     stop_gravity_comp_ = n.advertiseService(
-                "j2s7s300_driver/in/stop_gravity_comp", &JacoTrajectoryController::stopGravityCompService, this);
+                prefix_ + "_driver/in/stop_gravity_comp", &JacoTrajectoryController::stopGravityCompService, this);
 
     // Setup a fake admittance service (Force control)
-    start_force_control_service_ = n.advertiseService("j2s7s300_driver/in/start_force_control", &JacoTrajectoryController::startForceControlCallback, this);
-    stop_force_control_service_ = n.advertiseService("j2s7s300_driver/in/stop_force_control", &JacoTrajectoryController::stopForceControlCallback, this);
+    start_force_control_service_ = n.advertiseService(prefix_ + "_driver/in/start_force_control", &JacoTrajectoryController::startForceControlCallback, this);
+    stop_force_control_service_ = n.advertiseService(prefix_ + "_driver/in/stop_force_control", &JacoTrajectoryController::stopForceControlCallback, this);
 
     // Connect to the gazebo low-level ros controller
-    angCmdSimPublisher = n.advertise<trajectory_msgs::JointTrajectory>("/j2s7s300/command", 1);
+    angCmdSimPublisher = n.advertise<trajectory_msgs::JointTrajectory>(prefix_ + "command", 1);
   }
 
   // Subscribes to the joint states of the robot
@@ -98,13 +99,22 @@ void JacoTrajectoryController::jointStateCallback(const sensor_msgs::JointState 
   std::vector<double> position, velocity, effort;
   std::vector<std::string> names;
   position.resize(NUM_JACO_JOINTS);
-  velocity.resize(NUM_JACO_JOINTS);
-  effort.resize(NUM_JACO_JOINTS);
   names.resize(NUM_JACO_JOINTS);
   arm_msg.position = position;
-  arm_msg.velocity = velocity;
-  arm_msg.effort = effort;
   arm_msg.name = names;
+
+  bool has_velocity = msg.velocity.size() > 0;
+  bool has_effort = msg.effort.size() > 0;
+  if (has_velocity)
+  {
+    velocity.resize(NUM_JACO_JOINTS);
+    arm_msg.velocity = velocity;
+  }
+  if (has_effort)
+  {
+    effort.resize(NUM_JACO_JOINTS);
+    arm_msg.effort = effort;
+  }
 
   // Cycle through the number of JACO joints
   for (int joint_id = 0; joint_id < NUM_JACO_JOINTS; joint_id++){
@@ -116,8 +126,15 @@ void JacoTrajectoryController::jointStateCallback(const sensor_msgs::JointState 
     // Pull out joint loc and store
     arm_msg.position[joint_id] = msg.position[msg_loc];
     arm_msg.name[joint_id] = msg.name[msg_loc];
-    arm_msg.velocity[joint_id] = msg.velocity[msg_loc];
-    arm_msg.effort[joint_id] = msg.effort[msg_loc];
+
+    if (has_velocity)
+    {
+      arm_msg.velocity[joint_id] = msg.velocity[msg_loc];
+    }
+    if (has_effort)
+    {
+      arm_msg.effort[joint_id] = msg.effort[msg_loc];
+    }
   }
 
   jointStates = arm_msg;
